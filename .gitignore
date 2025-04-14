@@ -81,3 +81,2170 @@ Best regards,
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1)replenishment-form.component.ts:
+import { Component, OnInit } from '@angular/core';
+import { ReplenishmentRule } from '@models/replenishment';
+import { ReplenishmentRuleService } from '@services/replenishment.service';
+import { Router, RouterModule } from '@angular/router';
+
+
+@Component({
+  selector: 'app-replenishment-form',
+  templateUrl: './replenishment-form.component.html',
+  styleUrls: ['./replenishment-form.component.scss']
+})
+export class ReplenishmentFormComponent implements OnInit {
+
+  replenishmentRule: ReplenishmentRule = {
+    productId: 0,
+    minThreshold: 0,
+    maxThreshold: 0,
+    reorderQuantity: 0,
+    supplierId: 0,
+    createdAt: new Date()
+  };
+  errorMessage: string = '';
+
+  constructor(
+    private replenishmentRuleService: ReplenishmentRuleService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {}
+
+  onSubmit(): void {
+    this.replenishmentRuleService.createReplenishmentRule(this.replenishmentRule).subscribe({
+      next: (data) => {
+        alert('Replenishment rule created successfully!');
+        this.router.navigate(['/replenishment']);
+      },
+      error: (error) => {
+        this.errorMessage = 'Error creating replenishment rule. Please try again.';
+        console.error('Error creating replenishment rule:', error);
+      }
+    });
+  }
+}
+
+2)replenishment-form.component.html:
+<app-layout-header></app-layout-header>
+<h2 class="text-center my-5">Add Replenishment Rule</h2>
+
+<form (ngSubmit)="onSubmit()" #replenishmentForm="ngForm" class="border rounded p-5 w-50 mb-5 mx-auto">
+
+  <div *ngIf="errorMessage" class="text-danger">
+    {{ errorMessage }}
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Product ID*</label>
+    <input required class="form-control" type="number" name="productId" [(ngModel)]="replenishmentRule.productId" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Minimum Threshold*</label>
+    <input required class="form-control" type="number" name="minThreshold" [(ngModel)]="replenishmentRule.minThreshold" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Maximum Threshold*</label>
+    <input required class="form-control" type="number" name="maxThreshold" [(ngModel)]="replenishmentRule.maxThreshold" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Reorder Quantity*</label>
+    <input required class="form-control" type="number" name="reorderQuantity" [(ngModel)]="replenishmentRule.reorderQuantity" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Supplier ID*</label>
+    <input required class="form-control" type="number" name="supplierId" [(ngModel)]="replenishmentRule.supplierId" />
+  </div>
+
+  <button class="btn btn-primary" type="submit" [disabled]="replenishmentForm.invalid">Create Rule</button>
+</form>
+
+3)replenishment-table.component.ts:
+import { Component, OnInit } from '@angular/core';
+import { ReplenishmentRule } from '@models/replenishment';
+import { ReplenishmentRuleService } from '@services/replenishment.service';
+import { Router } from '@angular/router';
+
+
+@Component({
+  selector: 'app-replenishment-table',
+  templateUrl: './replenishment-table.component.html',
+  styleUrls: ['./replenishment-table.component.scss']
+})
+export class ReplenishmentTableComponent implements OnInit {
+
+  replenishmentRules: ReplenishmentRule[] = [];
+
+  constructor(
+    private replenishmentRuleService: ReplenishmentRuleService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.replenishmentRuleService.getAllReplenishmentRules().subscribe({
+      next: (data) => {
+        this.replenishmentRules = data;
+      },
+      error: (error) => {
+        console.error('Error fetching replenishment rules:', error);
+      }
+    });
+  }
+
+  onAddReplenishment(): void {
+    this.router.navigate(['/replenishment/add']);
+  }
+
+}
+
+
+
+
+
+4)replenishment-table.component.html:
+<app-layout-header></app-layout-header>
+<h2 class="text-center my-5">Replenishment Rules</h2>
+
+<div class="card">
+  <div class="card-header">
+    <p class="fs-6">Overview</p>
+    <button class="btn btn-primary float-end mb-3" (click)="onAddReplenishment()">Add Replenishment Rule</button>
+  </div>
+  <div class="card-body">
+    <table class="table table-hover" *ngIf="replenishmentRules.length > 0">
+      <thead>
+        <tr>
+          <th>Product ID</th>
+          <th>Min Threshold</th>
+          <th>Max Threshold</th>
+          <th>Reorder Quantity</th>
+          <th>Supplier ID</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let rule of replenishmentRules">
+          <td>{{rule.productId}}</td>
+          <td>{{rule.minThreshold}}</td>
+          <td>{{rule.maxThreshold}}</td>
+          <td>{{rule.reorderQuantity}}</td>
+          <td>{{rule.supplierId}}</td>
+          <td>{{rule.createdAt | date}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+5)replenishment.ts:
+export class ReplenishmentRule {
+  productId: number = 0;
+  minThreshold: number = 0;
+  maxThreshold: number = 0;
+  reorderQuantity: number = 0;
+  supplierId: number = 0;
+  createdAt: Date = new Date();
+}
+
+6)replenishment.service.ts:
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ReplenishmentRule } from '@models/replenishment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ReplenishmentRuleService {
+
+  private apiUrl = 'http://localhost:5000/api/stock/replenishment';  // Replace with your backend API URL
+
+  constructor(private http: HttpClient) {}
+
+  // Get all replenishment rules
+  getAllReplenishmentRules(): Observable<ReplenishmentRule[]> {
+    return this.http.get<ReplenishmentRule[]>(`${this.apiUrl}`);
+  }
+
+  // Get replenishment rule by ProductId
+  getReplenishmentRuleByProductId(productId: number): Observable<ReplenishmentRule> {
+    return this.http.get<ReplenishmentRule>(`${this.apiUrl}/${productId}`);
+  }
+
+  // Create a new replenishment rule
+  createReplenishmentRule(rule: ReplenishmentRule): Observable<ReplenishmentRule> {
+    return this.http.post<ReplenishmentRule>(`${this.apiUrl}`, rule);
+  }
+}
+layout-header.component.html:
+<!-- NOTE Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" [routerLink]="['/dashboard']">
+      <!-- <img src="./assets/img/project/logo.svg" [alt]="appName + ' Logo'" class="img-fluid me-2"/> -->
+      {{ appName }}
+    </a>
+    <button class="navbar-toggler" type="button" (click)="isMenuCollapsed = !isMenuCollapsed" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" [ngbCollapse]="isMenuCollapsed" id="navbarSupportedContent">
+      <ul class="navbar-nav mb-2 mb-lg-0 w-100">
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/home']" [routerLinkActive]="['active']">{{ 'HOME' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" (click)="onClickUser()" style="cursor: pointer;">{{ 'User' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/supplier']" [routerLinkActive]="['active']">{{ 'SUPPLIER' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/product']" [routerLinkActive]="['active']">{{ 'Product' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/replenishment']" [routerLinkActive]="['active']">{{ 'Replenishment Rule' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/cultures']" [routerLinkActive]="['active']">{{ 'Culture' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/stock']" routerLinkActive="active">{{ 'Stock' | translate }}</a>
+        </li>
+      </ul>
+      <div class="d-flex">
+        <button class="btn btn-outline-danger" (click)="onClickLogout()">
+          {{ 'LOGOUT' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- NOTE Content -->
+<ng-content></ng-content>
+
+7)app-routing.module.ts:
+// Angular modules
+import { NgModule }          from '@angular/core';
+import { Routes }            from '@angular/router';
+
+import { RouterModule }      from '@angular/router';
+
+// Components
+import { RegistrationComponent } from './pages/auth/auth/registration/registration.component';
+import { AuthGuard } from './guards/auth.guard';
+import { NotFoundComponent } from './static/not-found/not-found.component';
+import { UserListComponent } from './pages/user-list/user-list.component';
+import { UserEditComponent } from './pages/user-edit/user-edit.component';
+import { ProductFormComponent } from './pages/product/product-form/product-form.component';
+import { ProductTableComponent } from './pages/product/product-table/product-table.component';
+import { CulturesTableComponent } from './pages/cultures/cultures-table/cultures-table.component';
+import { ReplenishmentTableComponent } from './pages/replenishment/replenishment-table/replenishment-table.component';
+import { ReplenishmentFormComponent } from './pages/replenishment/replenishment-form/replenishment-form.component';
+
+const routes : Routes = [
+  {
+    path         : 'auth',
+    loadChildren : () => import('./pages/auth/auth.module').then(m => m.AuthModule),
+  },
+  {
+    path         : 'home',
+    loadChildren : () => import('./pages/home/home.module').then(m => m.HomeModule),
+    canActivate: [AuthGuard],
+     // data: { roles: ['user', 'admin'] }  // how others can implement RBAC to protect routes
+  },
+  {
+    path         : 'supplier',
+    loadChildren : () => import('./pages/supplier/supplier.module').then(m => m.SupplierModule),
+    canActivate : [AuthGuard],
+    data: { roles: ['user', 'admin'] }
+  },
+  {
+    path         : 'stock',
+    loadChildren : () => import('./pages/stock/stock.module').then(m => m.StockModule),
+    // canActivate : [AuthGuard],
+    // data: { roles: ['admin'] }
+  },
+  { path : '',   redirectTo : 'auth/login', pathMatch : 'full' },
+  {path : 'not-found', component : NotFoundComponent},
+  //{ path : '**', redirectTo : 'not-found' },
+  { path: 'register', component:RegistrationComponent},
+  { path: 'users', component: UserListComponent ,
+    // canActivate: [AuthGuard],
+    // data: { roles: ['user', 'Admin'] }
+  },
+  { path: 'user-edit/:id', component: UserEditComponent,
+    // canActivate: [AuthGuard],
+    // data: { roles: ['Admin'] }
+   },
+
+   {path: 'product', component: ProductTableComponent,canActivate: [AuthGuard],data: { roles: ['user', 'admin'] }},
+   {path: 'product/add', component: ProductFormComponent, canActivate: [AuthGuard],data: { roles: ['admin'] }},
+   {path: 'product', redirectTo: '', pathMatch: 'full'},
+   {path: 'cultures', component: CulturesTableComponent,canActivate: [AuthGuard],data: { roles: ['user', 'admin'] }},
+
+   {path: 'replenishment', component: ReplenishmentTableComponent,canActivate: [AuthGuard],data: { roles: ['user', 'admin'] }},
+   {path: 'replenishment/add', component: ReplenishmentFormComponent, canActivate: [AuthGuard],data: { roles: ['admin'] }},
+   {path: 'replenishment', redirectTo: '', pathMatch: 'full'},
+
+];
+
+@NgModule({
+  imports : [RouterModule.forRoot(routes, { relativeLinkResolution : 'legacy', onSameUrlNavigation : 'reload' })],
+  exports : [RouterModule]
+})
+export class AppRoutingModule { }
+
+
+8)add-stock-movement.component.ts :
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { Culture } from '@models/cultures';
+import { Product } from '@models/product';
+import { StockMovement } from '@models/stock-movement.model';
+import { CultureService } from '@services/cultures.service';
+import { ProductService } from '@services/product.service';
+import { StockService } from '@services/stock.service';
+import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
+
+@Component({
+  selector: 'app-add-stock-movement',
+  templateUrl: './add-stock-movement.component.html',
+})
+export class AddStockMovementComponent {
+  movement = {
+    productId: 0,
+    stockMovementType: 0,
+    quantity: 0,
+    sourceLocation: '',
+    destinationLocation: ''
+  };
+
+  locations: string[] = []; 
+  products: Product[] = [];
+  
+  movementTypes = [
+    { value: 1, label: 'Inbound' },
+    { value: 2, label: 'Outbound' },
+    { value: 3, label: 'Transfer' },
+    { value: 4, label: 'Return' }
+  ];
+
+  serverError: string | null = null;
+
+  private hubConnection: HubConnection;
+
+  constructor(
+    private stockService: StockService,
+    private cultureService: CultureService,
+    private productService: ProductService,
+    private router: Router
+  ) {
+    this.hubConnection = new HubConnectionBuilder()
+      .withUrl('https://localhost:55935/api/stock/notificationHub')  // Replace with your actual SignalR Hub URLlocalhost:55935/api/products
+      .build();
+
+    this.loadLocations();
+    this.loadProducts();
+  }
+
+  ngOnInit(): void {
+    // Initialize SignalR connection
+    this.hubConnection = new HubConnectionBuilder()
+      .withUrl('https://yourapiurl/notificationHub') // Replace with your SignalR hub URL
+      .build();
+
+    // Start the connection
+    this.hubConnection
+      .start()
+      .then(() => console.log('SignalR connected'))
+      .catch(err => console.error('Error while starting SignalR connection: ', err));
+
+    // Listen to notification events
+    this.hubConnection.on('ReceiveNotification', (message: string) => {
+      console.log('Received notification:', message);
+      alert(message); // Display alert with the notification message
+    });
+  }
+
+  loadLocations() {
+    this.cultureService.getCultures().subscribe({
+      next: (cultures: Culture[]) => {
+        this.locations = cultures
+          .map(c => c.alpha2)
+          .filter(code => !!code);
+      },
+      error: (err) => {
+        console.error('Failed to load locations', err);
+      }
+    });
+  }
+
+  loadProducts(): void {
+    this.productService.getProduct().subscribe({
+      next: (res) => this.products = res,
+      error: (err) => {
+        console.error('Failed to load products', err);
+        this.serverError = 'Unable to load products';
+      }
+    });
+  }
+
+  isSourceRequired(): boolean {
+    return this.movement.stockMovementType === 2 ||
+           this.movement.stockMovementType === 3 ||
+           this.movement.stockMovementType === 4; 
+  }
+  
+  isDestinationRequired(): boolean {
+    return this.movement.stockMovementType === 1 || 
+           this.movement.stockMovementType === 3 || 
+           this.movement.stockMovementType === 4;   
+  }
+
+  submitForm(form: any): void {
+    if (form.invalid) return;
+
+    this.serverError = null;
+
+    const payload : StockMovement = {
+      productId: this.movement.productId,
+      stockMovementType: this.movement.stockMovementType,
+      quantity: this.movement.quantity,
+      sourceLocation: this.movement.sourceLocation,
+      destinationLocation: this.movement.destinationLocation,
+    };
+
+    this.stockService.addStockMovement(payload).subscribe({
+      next: () => this.router.navigate(['/stock']),
+      error: (err) => {
+        console.error('Failed to add stock movement', err);
+        this.serverError =
+          err?.error?.title ||
+          'Something went wrong. Please check your inputs and try again.';
+      }
+    });
+  }
+}
+
+add-stock-movement.component.hl:
+
+<app-layout-header></app-layout-header>
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Add Stock Movement</h2>
+    <form #stockForm="ngForm" (ngSubmit)="submitForm(stockForm)" novalidate class="w-50 mx-auto">
+
+      <div class="mb-3">
+        <label for="productId" class="form-label">Product</label>
+        <select
+          id="productId"
+          name="productId"
+          class="form-select"
+          [(ngModel)]="movement.productId"
+          #productId="ngModel"
+          required
+        >
+          <option [ngValue]="null" disabled selected>Select Product</option>
+          <option *ngFor="let product of products" [ngValue]="product.id">
+            {{ product.productName }}
+          </option>
+        </select>
+        <div class="text-danger" *ngIf="productId.invalid && productId.touched">
+          Product is required.
+        </div>
+      </div>
+    
+        <div class="mb-3">
+          <label for="stockMovementType" class="form-label">Movement Type</label>
+          <select
+            id="stockMovementType"
+            name="stockMovementType"
+            class="form-select"
+            [(ngModel)]="movement.stockMovementType"
+            #movementType="ngModel"
+            required
+          >
+            <option [ngValue]="null" disabled>Select Type</option>
+            <option *ngFor="let type of movementTypes" [ngValue]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+          <div class="text-danger" *ngIf="movementType.invalid && movementType.touched">
+            Movement type is required.
+          </div>
+        </div>
+      
+        <div class="mb-3">
+          <label for="quantity" class="form-label">Quantity</label>
+          <input
+            type="number"
+            id="quantity"
+            name="quantity"
+            class="form-control"
+            [(ngModel)]="movement.quantity"
+            #quantity="ngModel"
+            required
+            min="1"
+          />
+          <div class="text-danger" *ngIf="quantity.errors?.['required'] && quantity.touched">
+            Quantity is required.
+          </div>
+          <div class="text-danger" *ngIf="quantity.errors?.['min'] && quantity.touched">
+            Quantity must be at least 1.
+          </div>
+        </div>
+      
+        <div class="mb-3">
+          <label for="sourceLocation" class="form-label">Source Location</label>
+          <select
+            id="sourceLocation"
+            name="sourceLocation"
+            class="form-select"
+            [(ngModel)]="movement.sourceLocation"
+            [required]="isSourceRequired()"
+            #srcLoc="ngModel"
+          >
+            <option [ngValue]="null" disabled selected>Select Source</option>
+            <option *ngFor="let loc of locations" [ngValue]="loc">{{ loc }}</option>
+          </select>
+          <div class="text-danger" *ngIf="srcLoc.invalid && srcLoc.touched">
+            Source location is required for this movement type.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="destinationLocation" class="form-label">Destination Location</label>
+          <select
+            id="destinationLocation"
+            name="destinationLocation"
+            class="form-select"
+            [(ngModel)]="movement.destinationLocation"
+            [required]="isDestinationRequired()"
+            #destLoc="ngModel"
+          >
+            <option [ngValue]="null" disabled selected>Select Destination</option>
+            <option *ngFor="let loc of locations" [ngValue]="loc">{{ loc }}</option>
+          </select>
+          <div class="text-danger" *ngIf="destLoc.invalid && destLoc.touched">
+            Destination location is required for this movement type.
+          </div>
+        </div>
+      
+        <button type="submit" class="btn btn-primary" [disabled]="stockForm.invalid">
+          Submit
+        </button>
+
+        <div class="text-danger mt-2" *ngIf="serverError">
+          {{ serverError }}
+        </div>
+      </form>     
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<app-layout-header></app-layout-header>
+
+<div class="container mt-4">
+    <div  class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Stock Movements</h2>
+        <button (click)="openAddStockMovementForm()" class="btn btn-primary">Add Stock Movement</button>
+    </div>
+
+    <div class="mb-3">
+      <input type="text" class="form-control" placeholder="Search by Product ID or Location" [(ngModel)]="search">
+    </div>
+  
+    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+        <table class="table table-bordered table-hover" *ngIf="filteredStockMovements().length > 0; else noResults">
+            <thead class="table-light">
+              <tr>
+                <th>Product ID</th>
+                <th>Movement Type</th>
+                <th>Quantity</th>
+                <th>Source</th>
+                <th>Destination</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let movement of filteredStockMovements()">
+                <td>{{ movement.productId }}</td>
+                <td>{{ movement.stockMovementType  | movementTypeLabel }}</td>
+                <td>{{ movement.quantity }}</td>
+                <td>{{ movement.sourceLocation || '-' }}</td>
+                <td>{{ movement.destinationLocation || '-' }}</td>
+                <td>{{ movement.createdAt | date: 'short' }}</td>
+              </tr>
+            </tbody>
+          </table>
+    </div>  
+    
+    <ng-template #noResults>
+        <div class="text-danger mt-3">
+          No stock movements found.
+        </div>
+      </ng-template>
+  </div>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { StockMovement } from '@models/stock-movement.model';
+import { StockService } from '@services/stock.service';
+
+@Component({
+  selector: 'app-stock-list',
+  templateUrl: './stock-list.component.html',
+})
+export class StockListComponent implements OnInit {
+  stockMovements: StockMovement[] = [];
+  search: string = '';
+
+  constructor(private stockService: StockService, private router: Router) {}
+
+  ngOnInit(): void {
+    this.fetchStockMovements();
+  }
+
+  fetchStockMovements(): void {
+    this.stockService.getAllStockMovements().subscribe({
+      next: (data) => this.stockMovements = data,
+      error: (err) => console.error('Failed to fetch stock movements:', err)
+    });
+  }
+
+  filteredStockMovements(): StockMovement[] {
+    if (!this.search) return this.stockMovements;
+
+    const term = this.search.toLowerCase().trim();
+
+    return this.stockMovements.filter(movement =>
+      movement.productId.toString().includes(term) ||
+      (movement.sourceLocation?.toLowerCase().includes(term) || '') ||
+      (movement.destinationLocation?.toLowerCase().includes(term) || '')
+    );
+  }
+
+  openAddStockMovementForm() {
+    this.router.navigate(['stock/add']);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- NOTE Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" [routerLink]="['/dashboard']">
+      <!-- <img src="./assets/img/project/logo.svg" [alt]="appName + ' Logo'" class="img-fluid me-2"/> -->
+      {{ appName }}
+    </a>
+    <button class="navbar-toggler" type="button" (click)="isMenuCollapsed = !isMenuCollapsed" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" [ngbCollapse]="isMenuCollapsed" id="navbarSupportedContent">
+      <ul class="navbar-nav mb-2 mb-lg-0 w-100">
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/home']" [routerLinkActive]="['active']">{{ 'HOME' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" (click)="onClickUser()" style="cursor: pointer;">{{ 'User' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/supplier']" [routerLinkActive]="['active']">{{ 'SUPPLIER' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/product']" [routerLinkActive]="['active']">{{ 'Product' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/replenishment']" [routerLinkActive]="['active']">{{ 'Replenishment Rule' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/cultures']" [routerLinkActive]="['active']">{{ 'Culture' | translate }}</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" [routerLink]="['/stock']" routerLinkActive="active">{{ 'Stock' | translate }}</a>
+        </li>
+      </ul>
+      <div class="d-flex">
+        <button class="btn btn-outline-danger" (click)="onClickLogout()">
+          {{ 'LOGOUT' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- NOTE Content -->
+<ng-content></ng-content>
+
+
+
+
+
+
+
+
+
+
+
+
+
+export class ReplenishmentRule {
+  productId: number = 0;
+  minThreshold: number = 0;
+  maxThreshold: number = 0;
+  reorderQuantity: number = 0;
+  supplierId: number = 0;
+  createdAt: Date = new Date();
+}
+
+
+
+
+
+
+
+
+
+
+
+export interface StockMovement{
+    id?: number;
+    productId: number;
+    stockMovementType: number;
+    quantity: number;
+    sourceLocation?: string | null;
+    destinationLocation?: string | null;
+    createdAt?: string;  
+}
+
+
+
+
+
+
+stock.sevice.ts:
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { StockMovement } from '@models/stock-movement.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class StockService {
+  private readonly apiUrl = 'https://localhost:55935/api/stock';
+
+  constructor(private http: HttpClient) {}
+
+  getAllStockMovements(): Observable<StockMovement[]> {
+    return this.http.get<StockMovement[]>(this.apiUrl);
+  }
+
+  addStockMovement(stockMovement: StockMovement): Observable<string> {
+    return this.http.post(`${this.apiUrl}/movement`, stockMovement, {
+      responseType: 'text'
+    });
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+backend
+
+
+
+
+
+
+
+1) ReorderHub.cs:
+using Microsoft.AspNetCore.SignalR;
+using System.Threading.Tasks;
+
+namespace Pim.Application.Hubs
+{
+    public class NotificationHub : Hub
+    {
+        // Method to send out-of-stock notification to all connected clients
+        public async Task SendOutOfStockNotification(string productId)
+        {
+            // Notify all connected clients about the out-of-stock product
+            await Clients.All.SendAsync("ReceiveOutOfStockNotification", productId);
+        }
+
+        // Method to send auto-reorder notifications (optional based on your business logic)
+        public async Task SendAutoReorderNotification(string productId, int reorderQuantity)
+        {
+            // Notify all clients about the auto reorder request
+            await Clients.All.SendAsync("ReceiveAutoReorderNotification", productId, reorderQuantity);
+        }
+    }
+}
+
+2)ReplenishmentRuleDto.cs:
+using System;
+using Pim.Application.Models.Base;
+
+namespace Pim.Application.Models
+{
+    public class ReplenishmentRuleDto : BaseModel
+    {
+        public int ProductId { get; set; }
+        public int MinThreshold { get; set; }
+        public int MaxThreshold { get; set; }
+        public int ReorderQuantity { get; set; }
+        public int SupplierId { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+}
+
+3)StockMovementDto.cs:
+using System;
+using System.ComponentModel.DataAnnotations;
+using Pim.Core.Enums;
+
+namespace Pim.Application.Models
+{
+    public class StockMovementDto
+    {
+        [Required]
+        public int ProductId { get; set; }
+
+        [Required]
+        public StockMovementType StockMovementType { get; set; }
+
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than 0.")]
+        public int Quantity { get; set; }
+
+        public string? SourceLocation { get; set; }
+        public string? DestinationLocation { get; set; }
+    }
+}
+
+4)ReplenishmentRuleService.cs :
+// using Pim.Core.Entities;
+// using Pim.Core.Repositories;
+// using Pim.Application.Models;
+// using System.Collections.Generic;
+// using System.Linq;
+// using System.Threading.Tasks;
+// using System;
+// using Pim.Application.Interfaces;
+
+// namespace Pim.Application.Services
+// {
+//     public class ReplenishmentRuleService : IReplenishmentRuleService
+//     {
+//         private readonly IReplenishmentRuleRepository _replenishmentRuleRepository;
+        
+//         public ReplenishmentRuleService(IReplenishmentRuleRepository replenishmentRuleRepository)
+//         {
+//             _replenishmentRuleRepository = replenishmentRuleRepository;
+//         }
+
+//         public async Task<List<ReplenishmentRuleDto>> GetAllReplenishmentRulesAsync()
+//         {
+//             var rules = await _replenishmentRuleRepository.GetAllReplenishmentRulesAsync();
+//             return rules.Select(rr => new ReplenishmentRuleDto
+//             {
+//                 ProductId = rr.ProductId,
+//                 MinThreshold = rr.MinThreshold,
+//                 MaxThreshold = rr.MaxThreshold,
+//                 ReorderQuantity = rr.ReorderQuantity,
+//                 SupplierId = rr.SupplierId,
+//                 CreatedAt = rr.CreatedAt
+//             }).ToList();
+//         }
+
+//         public async Task<ReplenishmentRuleDto> GetReplenishmentRuleByProductIdAsync(int productId)
+//         {
+//             var rule = await _replenishmentRuleRepository.GetReplenishmentRuleByProductIdAsync(productId);
+//             if (rule == null)
+//                 return null;
+
+//             return new ReplenishmentRuleDto
+//             {
+//                 ProductId = rule.ProductId,
+//                 MinThreshold = rule.MinThreshold,
+//                 MaxThreshold = rule.MaxThreshold,
+//                 ReorderQuantity = rule.ReorderQuantity,
+//                 SupplierId = rule.SupplierId,
+//                 CreatedAt = rule.CreatedAt
+//             };
+//         }
+
+//         public async Task<ReplenishmentRuleDto> CreateReplenishmentRuleAsync(ReplenishmentRuleDto replenishmentRuleDto)
+//         {
+//             var replenishmentRule = new ReplenishmentRule
+//             {
+//                 ProductId = replenishmentRuleDto.ProductId,
+//                 MinThreshold = replenishmentRuleDto.MinThreshold,
+//                 MaxThreshold = replenishmentRuleDto.MaxThreshold,
+//                 ReorderQuantity = replenishmentRuleDto.ReorderQuantity,
+//                 SupplierId = replenishmentRuleDto.SupplierId,
+//                 CreatedAt = DateTime.UtcNow
+//             };
+
+//             var createdRule = await _replenishmentRuleRepository.CreateReplenishmentRuleAsync(replenishmentRule);
+
+//             return new ReplenishmentRuleDto
+//             {
+//                 ProductId = createdRule.ProductId,
+//                 MinThreshold = createdRule.MinThreshold,
+//                 MaxThreshold = createdRule.MaxThreshold,
+//                 ReorderQuantity = createdRule.ReorderQuantity,
+//                 SupplierId = createdRule.SupplierId,
+//                 CreatedAt = createdRule.CreatedAt
+//             };
+//         }
+//     }
+// }
+
+
+
+
+
+
+
+
+// using Microsoft.AspNetCore.SignalR;
+// using Pim.Core.Entities;
+// using Pim.Core.Repositories;
+// using Pim.Application.Models;
+// using Pim.Application.Interfaces;
+// using System.Threading.Tasks;
+// using System.Collections.Generic;
+// using Pim.Application.Services;
+
+// namespace Pim.Application.Services
+// {
+//     public class ReplenishmentRuleService : IReplenishmentRuleService
+//     {
+//         private readonly IReplenishmentRuleRepository _replenishmentRuleRepository;
+//         private readonly IHubContext<ReorderHub> _hubContext;
+//         private readonly IStockRepository _stockRepository; // Injecting IStockRepository
+
+//         // Constructor Injection
+//         public ReplenishmentRuleService(
+//             IReplenishmentRuleRepository replenishmentRuleRepository,
+//             IHubContext<ReorderHub> hubContext,
+//             IStockRepository stockRepository) // Adding stockRepository
+//         {
+//             _replenishmentRuleRepository = replenishmentRuleRepository;
+//             _hubContext = hubContext;
+//             _stockRepository = stockRepository; // Storing stockRepository
+//         }
+
+//         public Task<ReplenishmentRuleDto> CreateReplenishmentRuleAsync(ReplenishmentRuleDto replenishmentRuleDto)
+//         {
+//             throw new System.NotImplementedException();
+//         }
+
+//         public Task<List<ReplenishmentRuleDto>> GetAllReplenishmentRulesAsync()
+//         {
+//             throw new System.NotImplementedException();
+//         }
+
+//         public async Task<ReplenishmentRuleDto> GetReplenishmentRuleByProductIdAsync(int productId)
+//         {
+//             var rule = await _replenishmentRuleRepository.GetReplenishmentRuleByProductIdAsync(productId);
+//             if (rule == null) return null;
+
+//             // Check stock and send notifications
+//             await CheckStockAndNotify(rule);
+
+//             return new ReplenishmentRuleDto
+//             {
+//                 ProductId = rule.ProductId,
+//                 MinThreshold = rule.MinThreshold,
+//                 MaxThreshold = rule.MaxThreshold,
+//                 ReorderQuantity = rule.ReorderQuantity,
+//                 SupplierId = rule.SupplierId,
+//                 CreatedAt = rule.CreatedAt
+//             };
+//         }
+
+//         private async Task CheckStockAndNotify(ReplenishmentRule rule)
+//         {
+//             // Fetch current stock from the repository using GetProductStockAsync
+//             var productStock = await _stockRepository.GetProductStockAsync(rule.ProductId);
+            
+//             if (productStock == null)
+//             {
+//                 // If no stock information is found for the product, handle accordingly
+//                 await _hubContext.Clients.All.SendAsync("ReceiveOutOfStockNotification", $"Product ID {rule.ProductId} has no stock information.");
+//                 return;
+//             }
+
+//             int currentStock = productStock.Quantity;
+
+//             // Check if stock is below the threshold and trigger reorder notification
+//             if (currentStock < rule.MinThreshold)
+//             {
+//                 string reorderMessage = $"Reorder placed for Product ID {rule.ProductId}. Stock is below threshold.";
+//                 await _hubContext.Clients.All.SendAsync("ReceiveReorderNotification", reorderMessage);
+//             }
+
+//             // Check if stock is zero and trigger out-of-stock notification
+//             if (currentStock == 0)
+//             {
+//                 string outOfStockMessage = $"Product ID {rule.ProductId} is out of stock.";
+//                 await _hubContext.Clients.All.SendAsync("ReceiveOutOfStockNotification", outOfStockMessage);
+//             }
+//         }
+//     }
+// }
+
+
+
+// using Pim.Core.Entities;
+// using Pim.Core.Repositories;
+// using Pim.Application.Models;
+// using System.Collections.Generic;
+// using System.Linq;
+// using System.Threading.Tasks;
+// using System;
+// using Pim.Application.Interfaces;
+
+// namespace Pim.Application.Services
+// {
+//     public class ReplenishmentRuleService : IReplenishmentRuleService
+//     {
+//         private readonly IReplenishmentRuleRepository _replenishmentRuleRepository;
+//         private readonly IStockRepository _stockRepository;  // Inject IStockRepository
+
+//         public ReplenishmentRuleService(
+//             IReplenishmentRuleRepository replenishmentRuleRepository, 
+//             IStockRepository stockRepository)
+//         {
+//             _replenishmentRuleRepository = replenishmentRuleRepository;
+//             _stockRepository = stockRepository;  // Initialize IStockRepository
+//         }
+
+//         public async Task<List<ReplenishmentRuleDto>> GetAllReplenishmentRulesAsync()
+//         {
+//             var rules = await _replenishmentRuleRepository.GetAllReplenishmentRulesAsync();
+//             return rules.Select(rr => new ReplenishmentRuleDto
+//             {
+//                 ProductId = rr.ProductId,
+//                 MinThreshold = rr.MinThreshold,
+//                 MaxThreshold = rr.MaxThreshold,
+//                 ReorderQuantity = rr.ReorderQuantity,
+//                 SupplierId = rr.SupplierId,
+//                 CreatedAt = rr.CreatedAt
+//             }).ToList();
+//         }
+
+//         public async Task<ReplenishmentRuleDto> GetReplenishmentRuleByProductIdAsync(int productId)
+//         {
+//             var rule = await _replenishmentRuleRepository.GetReplenishmentRuleByProductIdAsync(productId);
+//             if (rule == null)
+//                 return null;
+
+//             return new ReplenishmentRuleDto
+//             {
+//                 ProductId = rule.ProductId,
+//                 MinThreshold = rule.MinThreshold,
+//                 MaxThreshold = rule.MaxThreshold,
+//                 ReorderQuantity = rule.ReorderQuantity,
+//                 SupplierId = rule.SupplierId,
+//                 CreatedAt = rule.CreatedAt
+//             };
+//         }
+
+//         public async Task<ReplenishmentRuleDto> CreateReplenishmentRuleAsync(ReplenishmentRuleDto replenishmentRuleDto)
+//         {
+//             // Check stock quantity before creating replenishment rule
+//             var stock = await _stockRepository.GetProductStockAsync(replenishmentRuleDto.ProductId);
+//             if (stock == null)
+//             {
+//                 throw new Exception("Product stock not found.");
+//             }
+
+//             // Check if stock is below the MinThreshold
+//             if (stock.Quantity <= replenishmentRuleDto.MinThreshold)
+//             {
+//                 // Trigger auto-reorder or other appropriate action
+//                 Console.WriteLine($"Auto reorder triggered for ProductId: {replenishmentRuleDto.ProductId}, " +
+//                                   $"Current stock: {stock.Quantity}, MinThreshold: {replenishmentRuleDto.MinThreshold}");
+                
+//                 // Optionally, you can initiate a reorder request here or notify an admin
+//             }
+
+//             var replenishmentRule = new ReplenishmentRule
+//             {
+//                 ProductId = replenishmentRuleDto.ProductId,
+//                 MinThreshold = replenishmentRuleDto.MinThreshold,
+//                 MaxThreshold = replenishmentRuleDto.MaxThreshold,
+//                 ReorderQuantity = replenishmentRuleDto.ReorderQuantity,
+//                 SupplierId = replenishmentRuleDto.SupplierId,
+//                 CreatedAt = DateTime.UtcNow
+//             };
+
+//             var createdRule = await _replenishmentRuleRepository.CreateReplenishmentRuleAsync(replenishmentRule);
+
+//             return new ReplenishmentRuleDto
+//             {
+//                 ProductId = createdRule.ProductId,
+//                 MinThreshold = createdRule.MinThreshold,
+//                 MaxThreshold = createdRule.MaxThreshold,
+//                 ReorderQuantity = createdRule.ReorderQuantity,
+//                 SupplierId = createdRule.SupplierId,
+//                 CreatedAt = createdRule.CreatedAt
+//             };
+//         }
+//     }
+// }
+
+
+using Pim.Application.Hubs;
+using Pim.Application.Interfaces;
+using Pim.Core.Entities;
+using Pim.Core.Repositories;
+using Pim.Application.Models;
+using Microsoft.AspNetCore.SignalR;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
+
+namespace Pim.Application.Services
+{
+    public class ReplenishmentRuleService : IReplenishmentRuleService
+    {
+        private readonly IReplenishmentRuleRepository _replenishmentRuleRepository;
+        private readonly IStockRepository _stockRepository;  // Inject the StockRepository
+        private readonly IHubContext<NotificationHub> _hubContext;
+
+        public ReplenishmentRuleService(
+            IReplenishmentRuleRepository replenishmentRuleRepository,
+            IStockRepository stockRepository,  // Inject the StockRepository here
+            IHubContext<NotificationHub> hubContext)
+        {
+            _replenishmentRuleRepository = replenishmentRuleRepository;
+            _stockRepository = stockRepository;
+            _hubContext = hubContext;
+        }
+
+        public async Task<List<ReplenishmentRuleDto>> GetAllReplenishmentRulesAsync()
+        {
+            var rules = await _replenishmentRuleRepository.GetAllReplenishmentRulesAsync();
+            return rules.Select(rr => new ReplenishmentRuleDto
+            {
+                ProductId = rr.ProductId,
+                MinThreshold = rr.MinThreshold,
+                MaxThreshold = rr.MaxThreshold,
+                ReorderQuantity = rr.ReorderQuantity,
+                SupplierId = rr.SupplierId,
+                CreatedAt = rr.CreatedAt
+            }).ToList();
+        }
+
+        public async Task<ReplenishmentRuleDto> GetReplenishmentRuleByProductIdAsync(int productId)
+        {
+            var rule = await _replenishmentRuleRepository.GetReplenishmentRuleByProductIdAsync(productId);
+            if (rule == null)
+                return null;
+
+            return new ReplenishmentRuleDto
+            {
+                ProductId = rule.ProductId,
+                MinThreshold = rule.MinThreshold,
+                MaxThreshold = rule.MaxThreshold,
+                ReorderQuantity = rule.ReorderQuantity,
+                SupplierId = rule.SupplierId,
+                CreatedAt = rule.CreatedAt
+            };
+        }
+
+        public async Task<ReplenishmentRuleDto> CreateReplenishmentRuleAsync(ReplenishmentRuleDto replenishmentRuleDto)
+        {
+            // Check if a rule already exists for the provided ProductId
+            var existingRule = await _replenishmentRuleRepository.GetReplenishmentRuleByProductIdAsync(replenishmentRuleDto.ProductId);
+            if (existingRule != null)
+            {
+                // If a rule already exists, return an error message (you can handle this as per your requirements)
+                throw new InvalidOperationException($"A replenishment rule already exists for ProductId {replenishmentRuleDto.ProductId}");
+            }
+
+            // Create the new replenishment rule
+            var replenishmentRule = new ReplenishmentRule
+            {
+                ProductId = replenishmentRuleDto.ProductId,
+                MinThreshold = replenishmentRuleDto.MinThreshold,
+                MaxThreshold = replenishmentRuleDto.MaxThreshold,
+                ReorderQuantity = replenishmentRuleDto.ReorderQuantity,
+                SupplierId = replenishmentRuleDto.SupplierId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var createdRule = await _replenishmentRuleRepository.CreateReplenishmentRuleAsync(replenishmentRule);
+
+            // Check the stock for the product
+            var stock = await _stockRepository.GetProductStockAsync(replenishmentRuleDto.ProductId);
+            if (stock != null && stock.Quantity <= replenishmentRuleDto.MinThreshold)
+            {
+                // Auto reorder triggered because stock is below the MinThreshold
+                // Example: Log the action or trigger an automatic reorder.
+                Console.WriteLine($"Auto reorder triggered for ProductId: {replenishmentRuleDto.ProductId}, " +
+                                  $"Current stock: {stock.Quantity}, MinThreshold: {replenishmentRuleDto.MinThreshold}");
+
+                // Optionally, send notification to connected clients via SignalR
+                await _hubContext.Clients.All.SendAsync("ReceiveNotification", 
+                    $"Product {replenishmentRuleDto.ProductId} stock is low! Current stock: {stock.Quantity}. Reorder now.");
+            }
+
+            // After creating the rule, you can use the hub context to send notifications
+            if (createdRule.MinThreshold > 0)
+            {
+                // Example: Send out-of-stock notification or auto-reorder
+                await _hubContext.Clients.All.SendAsync("ReceiveNotification", $"Product {createdRule.ProductId} is out of stock.");
+            }
+
+            return new ReplenishmentRuleDto
+            {
+                ProductId = createdRule.ProductId,
+                MinThreshold = createdRule.MinThreshold,
+                MaxThreshold = createdRule.MaxThreshold,
+                ReorderQuantity = createdRule.ReorderQuantity,
+                SupplierId = createdRule.SupplierId,
+                CreatedAt = createdRule.CreatedAt
+            };
+        }
+    }
+}
+
+5)StockMovementService.ts:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Pim.Application.Interfaces;
+using Pim.Application.Models;
+using Pim.Core.Entities;
+using Pim.Core.Enums;
+using Pim.Core.Repositories;
+
+namespace Pim.Application.Services
+{
+    public class StockMovementService : IStockMovementService
+    {
+        private readonly IStockMovementRepository _stockMovementRepository;
+        private readonly IStockRepository _stockRepository;
+
+        public StockMovementService(
+            IStockMovementRepository movementRepository,
+            IStockRepository stockRepository)
+        {
+            _stockMovementRepository = movementRepository;
+            _stockRepository = stockRepository;
+        }
+
+        public async Task<bool> AddStockMovementAsync(StockMovementDto dto)
+        {
+            try
+            {
+                ValidateStockMovement(dto);
+
+                var product = await _stockRepository.GetByIdAsync(dto.ProductId);
+                if (product is null)
+                    return false;
+
+                var productStock = await _stockRepository.GetProductStockAsync(dto.ProductId);
+                if (productStock is null)
+                    return false;
+
+                switch (dto.StockMovementType)
+                {
+                    case StockMovementType.Inbound:
+                    case StockMovementType.Return:
+                        //product.StockQuantity += dto.Quantity;
+                        productStock.Quantity += dto.Quantity;
+                        break;
+
+                    case StockMovementType.Outbound:
+                        if (productStock.Quantity < dto.Quantity)
+                            return false;
+                        //product.StockQuantity -= dto.Quantity;
+                        productStock.Quantity -= dto.Quantity;
+                        break;
+
+                    case StockMovementType.Transfer:
+                        if (productStock.Quantity < dto.Quantity)
+                            return false;
+                        break;
+                }
+                productStock.LastUpdatedAt = DateTime.UtcNow;
+
+                var stockMovement = StockMovement.Create(
+                    dto.ProductId,
+                    dto.StockMovementType,
+                    dto.Quantity,
+                    dto.SourceLocation,
+                    dto.DestinationLocation
+                );
+
+                await _stockMovementRepository.AddStockMovementAsync(stockMovement);
+                //await _productRepository.UpdateAsync(product);
+                await _stockRepository.UpdateProductStockAsync(productStock);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<IEnumerable<StockMovement>> GetStockMovementsAsync()
+        {
+            return await _stockMovementRepository.GetStockMovementsAsync();
+        }
+
+        public async Task<IEnumerable<StockMovement>> GetStockMovementByProductIdAsync(int id)
+        {
+            return await _stockMovementRepository.GetStockMovementByProductIdAsync(id);
+        }
+
+        public async Task<IEnumerable<StockMovement>> GetStockMovementsByProductNameAsync(string productName)
+        {
+            return await _stockMovementRepository.GetStockMovementByProductNameAsync(productName);
+        }
+
+        private void ValidateStockMovement(StockMovementDto dto)
+        {
+
+            dto.SourceLocation = dto.SourceLocation?.Trim().ToLowerInvariant();
+            dto.DestinationLocation = dto.DestinationLocation?.Trim().ToLowerInvariant();
+
+            if (dto.Quantity <= 0)
+                throw new ArgumentException("Quantity must be greater than zero.");
+
+            switch (dto.StockMovementType)
+            {
+                case StockMovementType.Inbound:
+                    if (string.IsNullOrWhiteSpace(dto.DestinationLocation))
+                        throw new ArgumentException("Inbound requires a destination location.");
+                    break;
+
+                case StockMovementType.Outbound:
+                    if (string.IsNullOrWhiteSpace(dto.SourceLocation))
+                        throw new ArgumentException("Outbound requires a source location.");
+                    break;
+
+                case StockMovementType.Transfer:
+                case StockMovementType.Return:
+                    if (string.IsNullOrWhiteSpace(dto.SourceLocation) || string.IsNullOrWhiteSpace(dto.DestinationLocation))
+                        throw new ArgumentException($"{dto.StockMovementType} requires both source and destination locations.");
+                    break;
+
+                default:
+                    throw new ArgumentException("Invalid stock movement type.");
+            }
+        }
+    }
+}
+
+
+6)ReplenishmentRule.cs:
+using System;
+using System.ComponentModel.DataAnnotations;
+using Pim.Core.Entities.Base;
+
+namespace Pim.Core.Entities
+{
+    public class ReplenishmentRule : Entity
+    {
+        public int ProductId { get; set; }
+
+        public Product Product { get; set; }
+
+        [Range(0, int.MaxValue)]
+        public int MinThreshold { get; set; }
+
+        [Range(0, int.MaxValue)]
+        public int MaxThreshold { get; set; }
+
+        [Range(0, int.MaxValue)]
+        public int ReorderQuantity { get; set; }
+
+        public int SupplierId { get; set; }
+
+        public Supplier Supplier { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public static ReplenishmentRule Create(int ruleId, int productId, int minThreshold, int maxThreshold, int reorderQuantity, int supplierId, DateTime createdAt)
+        {
+            var replenishmentRule = new ReplenishmentRule
+            {
+                Id = ruleId,
+                ProductId = productId,
+                MinThreshold = minThreshold,
+                MaxThreshold = maxThreshold,
+                ReorderQuantity = reorderQuantity,
+                SupplierId = supplierId,
+                CreatedAt = createdAt,
+            };
+            return replenishmentRule;
+        }
+    }
+}
+
+7)ProductStock.cs:
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Pim.Core.Entities.Base;
+
+namespace Pim.Core.Entities
+{
+    public class ProductStock : Entity
+    {
+        [Required]
+        [ForeignKey("Product")]
+        public int ProductId { get; set; }
+
+        public Product Product { get; set; }
+
+        [Required]
+        public int Quantity { get; set; }
+
+        [Required]
+        public DateTime LastUpdatedAt { get; set; }
+    }
+}
+
+8)StockMovement.cs:
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Pim.Core.Entities.Base;
+using Pim.Core.Enums;
+
+namespace Pim.Core.Entities
+{
+    public class StockMovement : Entity
+    {
+        public StockMovement() { }
+
+        [Required]
+        [ForeignKey("Product")]
+        public int ProductId { get; set; }
+
+        [Required]
+        public StockMovementType StockMovementType { get; set; }
+        
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than 0.")]
+        public int Quantity { get; set; }
+
+        public string? SourceLocation { get; set; }
+        public string? DestinationLocation { get; set; }
+
+        [Required]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // navigation property
+        public Product? Product;
+
+        public static StockMovement Create(int productId, StockMovementType stockMovementType, int quantity, string? sourceLocation, string? destinationLocation)
+        {
+            var stockMovement = new StockMovement
+            {
+                ProductId = productId,
+                StockMovementType = stockMovementType,
+                Quantity = quantity,
+                SourceLocation = sourceLocation,
+                DestinationLocation = destinationLocation,
+                CreatedAt = DateTime.UtcNow
+            };
+            return stockMovement;
+        }
+    }
+}
+
+9)IReplenishmentRepository.cs:
+using Pim.Core.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Pim.Core.Repositories
+{
+    public interface IReplenishmentRuleRepository
+    {
+        Task<List<ReplenishmentRule>> GetAllReplenishmentRulesAsync();
+        Task<ReplenishmentRule> GetReplenishmentRuleByProductIdAsync(int productId);
+        Task<ReplenishmentRule> CreateReplenishmentRuleAsync(ReplenishmentRule replenishmentRule);
+    }
+}
+
+10)IStockMovementRepository.cs:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Pim.Core.Entities;
+using Pim.Core.Repositories.Base;
+
+namespace Pim.Core.Repositories
+{
+    public interface IStockMovementRepository : IRepository<StockMovement>
+    {
+        Task AddStockMovementAsync(StockMovement stockMovement);
+        Task<IEnumerable<StockMovement>> GetStockMovementByProductNameAsync(string productName);
+        Task<IEnumerable<StockMovement>> GetStockMovementByProductIdAsync(int id);
+        Task<IEnumerable<StockMovement>> GetStockMovementsAsync();
+    }
+}
+
+11)StockRepository.cs:
+using Pim.Core.Entities;
+using Pim.Core.Repositories.Base;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Pim.Core.Repositories
+{
+    public interface IStockRepository : IRepository<ProductStock>
+    {
+        Task AddProductStockAsync(ProductStock stock);
+        Task<ProductStock?> GetProductStockAsync(int productId);
+        Task UpdateProductStockAsync(ProductStock stock);
+    }
+}
+
+
+12)ReplenishmentRuleRepository.cs:
+using Pim.Core.Entities;
+using Pim.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Pim.Core.Repositories;
+using Pim.Infrastructure.Repository.Base;
+
+namespace Pim.Infrastructure.Repository
+{
+    public class ReplenishmentRuleRepository : Repository<ReplenishmentRule>, IReplenishmentRuleRepository
+    {
+        public ReplenishmentRuleRepository(PIMContext dbContext) : base(dbContext)
+        {
+        }
+
+        public async Task<List<ReplenishmentRule>> GetAllReplenishmentRulesAsync()
+        {
+            return await _dbContext.ReplenishmentRule
+                .Include(rr => rr.Product) 
+                .Include(rr => rr.Supplier) 
+                .ToListAsync();
+        }
+
+        public async Task<ReplenishmentRule> GetReplenishmentRuleByProductIdAsync(int productId)
+        {
+            return await _dbContext.ReplenishmentRule
+                .Include(rr => rr.Product)
+                .Include(rr => rr.Supplier)
+                .FirstOrDefaultAsync(rr => rr.ProductId == productId);
+        }
+
+        public async Task<ReplenishmentRule> CreateReplenishmentRuleAsync(ReplenishmentRule replenishmentRule)
+        {
+            await _dbContext.ReplenishmentRule.AddAsync(replenishmentRule);
+            await _dbContext.SaveChangesAsync();
+            return replenishmentRule;
+        }
+    }
+}
+
+13)StockMovementRepository.cs:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Pim.Core.Entities;
+using Pim.Core.Repositories;
+using Pim.Infrastructure.Data;
+using Pim.Infrastructure.Repository.Base;
+
+namespace Pim.Infrastructure.Repository
+{
+    public class StockMovementRepository : Repository<StockMovement>, IStockMovementRepository
+    {
+        private readonly PIMContext _context;
+        public StockMovementRepository(PIMContext dbContext) : base(dbContext)
+        {
+            _context = dbContext;
+        }
+
+        public async Task AddStockMovementAsync(StockMovement stockMovement)
+        {
+            try
+            {
+                await _context.StockMovements.AddAsync(stockMovement);
+                await _context.SaveChangesAsync();
+            }
+            catch(Exception e)
+            {
+                throw new Exception("An error occurred while adding the stock movement.", e);
+            }
+        }
+
+        public async Task<IEnumerable<StockMovement>> GetStockMovementsAsync()
+        {
+            try
+            {
+                return await _context.StockMovements.ToListAsync();
+            }
+            catch (Exception e)
+            {
+                throw new Exception("An error occurred while fetching the stock movements.", e);
+            }
+        }
+
+        public async Task<IEnumerable<StockMovement>> GetStockMovementByProductIdAsync(int id)
+        {
+            try
+            {
+                return await _context.StockMovements
+                .Include(sm => sm.Product)
+                .Where(sm => sm.Product.Id == id)
+                .ToListAsync();
+            }
+            catch (Exception e)
+            {
+                throw new Exception("An error occurred while fetching the stock movement from product id.", e);
+            }
+        }
+
+        public async Task<IEnumerable<StockMovement>> GetStockMovementByProductNameAsync(string productName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(productName))
+                    return Enumerable.Empty<StockMovement>();
+
+                var normalizedName = productName.Trim().ToLower();
+
+                return await _context.StockMovements
+                    .Where(sm => sm.Product != null && sm.Product.ProductName.ToLower().Trim() == normalizedName)
+                    .ToListAsync();
+            }
+            catch (Exception e)
+            {
+                throw new Exception("An error occurred while fetching the stock movement from product name.", e);
+            }
+        }
+    }
+}
+
+
+14)StockRepository.cs:
+using Pim.Core.Entities;
+using Pim.Core.Repositories;
+using Pim.Core.Specifications;
+using Pim.Infrastructure.Data;
+using Pim.Infrastructure.Repository.Base;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Pim.Infrastructure.Repository
+{
+    public class StockRepository : Repository<ProductStock>, IStockRepository
+    {
+        public StockRepository(PIMContext dbContext) : base(dbContext)
+        {
+        }
+
+        public async Task AddProductStockAsync(ProductStock stock)
+        {
+            await _dbContext.ProductStocks.AddAsync(stock);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<ProductStock?> GetProductStockAsync(int productId)
+        {
+            return await _dbContext.ProductStocks
+            .FirstOrDefaultAsync(ps => ps.ProductId == productId);
+        }
+
+        public async Task UpdateProductStockAsync(ProductStock stock)
+        {
+            _dbContext.ProductStocks.Update(stock);
+            await _dbContext.SaveChangesAsync();
+        }
+
+    }
+}
+
+15) ReplenishmentRuleController.cs:
+using Microsoft.AspNetCore.Mvc;
+using Pim.Application.Interfaces;
+using Pim.Application.Models;
+using Pim.Application.Services;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Pim.WebAPI.Controllers
+{
+    [Route("api/stock/replenishment")]
+    [ApiController]
+    public class ReplenishmentRuleController : ControllerBase
+    {
+        private readonly IReplenishmentRuleService _replenishmentRuleService;
+
+        public ReplenishmentRuleController(IReplenishmentRuleService replenishmentRuleService)
+        {
+            _replenishmentRuleService = replenishmentRuleService;
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<ReplenishmentRuleDto>> CreateReplenishmentRule([FromBody] ReplenishmentRuleDto replenishmentRuleDto)
+        {
+            var createdRule = await _replenishmentRuleService.CreateReplenishmentRuleAsync(replenishmentRuleDto);
+            return CreatedAtAction(nameof(GetReplenishmentRuleByProductId), new { productId = createdRule.ProductId }, createdRule);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<List<ReplenishmentRuleDto>>> GetAllReplenishmentRules()
+        {
+            var rules = await _replenishmentRuleService.GetAllReplenishmentRulesAsync();
+            return Ok(rules);
+        }
+
+        // [HttpGet("{productId}")]
+        // public async Task<ActionResult<ReplenishmentRuleDto>> GetReplenishmentRuleByProductId(int productId)
+        // {
+        //     var rule = await _replenishmentRuleService.GetReplenishmentRuleByProductIdAsync(productId);
+        //     if (rule == null)
+        //     {
+        //         return NotFound();
+        //     }
+        //     return Ok(rule);
+        // }
+
+        [HttpGet("{productId}")]
+        public async Task<ActionResult<ReplenishmentRuleDto>> GetReplenishmentRuleByProductId(int productId)
+        {
+        var rule = await _replenishmentRuleService.GetReplenishmentRuleByProductIdAsync(productId);
+        if (rule == null)
+        {
+            return NotFound();
+        }
+        return Ok(rule);
+        }
+}
+}
+
+16)StockController.cs:
+using Microsoft.AspNetCore.Mvc;
+using Pim.Application.Interfaces;
+using Pim.Application.Models;
+using Pim.Core.Entities;
+
+namespace Pim.WebAPI.Controllers
+{
+    [ApiController]
+    [Route("api/stock")]
+    public class StockController : ControllerBase
+    {
+        private readonly IStockMovementService _stockMovementService;
+        public StockController(IStockMovementService stockMovementService)
+        {
+            _stockMovementService = stockMovementService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetStockMovementsAsync()
+        {
+            try
+            {
+                var result = await _stockMovementService.GetStockMovementsAsync();
+                if (result is null)
+                {
+                    return NotFound("Stock movements not found.");
+                }
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { message = $"Error during fetching all stock movements: {e.Message}" });
+            }
+        }
+
+
+        [HttpPost("movement")]
+        public async Task<IActionResult> AddStockMovementAsync([FromBody] StockMovementDto stockMovementDto)
+        {
+            try
+            {
+                var result = await _stockMovementService.AddStockMovementAsync(stockMovementDto);
+                if (result == false)
+                {
+                    return BadRequest("Failed to add stock movement.");
+                }
+                return Ok("Stock movement added successfully.");
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { message = $"Error during adding stock movements: {e.Message}" });
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetStockMovementByIdAsync(int id)
+        {
+            try
+            {
+                var stockMovement = await _stockMovementService.GetStockMovementByProductIdAsync(id);
+                if (stockMovement is null)
+                {
+                    return NotFound("Stock movement not found.");
+                }
+                return Ok(stockMovement);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { message = $"Error during fetching stock movements from product id : {e.Message}" });
+            }
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> GetStockMovementsByProductNameAsync([FromQuery] string productName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(productName))
+                {
+                    return BadRequest("Product name is required.");
+                }
+
+                var stockMovements = await _stockMovementService.GetStockMovementsByProductNameAsync(productName);
+                if (stockMovements is null)
+                {
+                    return NotFound("No stock movements found.");
+                }
+                return Ok(stockMovements);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { message = $"Error during fetching stock movements from product name : {e.Message}" });
+            }
+        }
+    }
+}
+
+17)program.cs:
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Pim.Application.Interfaces;
+using Pim.Application.Services;
+using Pim.Core.Configuration;
+using Pim.Core.Interfaces;
+using Pim.Core.Repositories.Base;
+using Pim.Core.Repositories;
+using Pim.Infrastructure.Data;
+using Pim.Infrastructure.Logging;
+using Pim.Infrastructure.Repository.Base;
+using Pim.Infrastructure.Repository;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using AspNetCoreRateLimit;
+using System.Text;
+using Pim.Infrastructure.Repositories;
+using Pim.Core.Services;
+using Pim.Application.Hubs;
+
+
+var builder = WebApplication.CreateBuilder(args);
+
+var configuration = builder.Configuration;
+string connectionString = configuration["ConnectionStrings:PimConnection"];
+
+builder.Services.Configure<PIMSettings>(configuration.GetSection("PIMSettings"));
+
+// allowing CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowCors", builder =>
+       builder.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader());
+});
+
+builder.Services.AddDbContext<PIMContext>(c =>
+    c.UseSqlServer(connectionString));
+
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ICultureRepository, CultureRepository>();
+builder.Services.AddScoped<IReplenishmentRuleRepository, ReplenishmentRuleRepository>();
+builder.Services.AddScoped<IStockRepository, StockRepository>();
+builder.Services.AddScoped(typeof(IAppLogger<>), typeof(LoggerAdapter<>));
+
+// Add Application Layer
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();  
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ICultureService, CultureService>();
+builder.Services.AddScoped<IReplenishmentRuleService, ReplenishmentRuleService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IDecryptionService, DecryptionService>();
+builder.Services.AddScoped<ISupplierService, SupplierService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
+builder.Services.AddScoped<IProductImageService, ProductImageService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICurrencyRepository, CurrencyRepository>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<ITaxRuleRepository, TaxRuleRepository>();
+builder.Services.AddScoped<ITaxRuleService, TaxRuleService>();
+builder.Services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+builder.Services.AddScoped<IStockMovementService, StockMovementService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSignalR();
+//
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                ValidAudience = builder.Configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            };
+        });
+
+builder.Services.AddAuthorization();
+
+
+// Rate limiting Setup
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("RateLimiting"));
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddInMemoryRateLimiting();
+
+// Add services to the container.
+builder.Services.AddControllers();
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// allowing CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowCors", builder =>
+       builder.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader());
+});
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
+        c.RoutePrefix = string.Empty;
+    });
+}
+
+app.UseCors("AllowCors");
+
+app.UseHttpsRedirection();
+
+app.UseIpRateLimiting();
+
+//app.UseAuthentication();
+
+app.UseAuthorization();
+
+app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
+
+app.Run();
+
+
+-------------IReplenishmentRuleService.cs:
+using Pim.Application.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Pim.Application.Interfaces
+{
+    public interface IReplenishmentRuleService
+    {
+        Task<List<ReplenishmentRuleDto>> GetAllReplenishmentRulesAsync();
+        Task<ReplenishmentRuleDto> GetReplenishmentRuleByProductIdAsync(int productId);
+        Task<ReplenishmentRuleDto> CreateReplenishmentRuleAsync(ReplenishmentRuleDto replenishmentRuleDto);
+    }
+}
+
+
+
+------------------IStockMovementService.cs:
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Pim.Application.Models;
+using Pim.Core.Entities;
+
+namespace Pim.Application.Interfaces
+{
+    public interface IStockMovementService
+    {
+        Task<bool> AddStockMovementAsync(StockMovementDto dto);
+        Task<IEnumerable<StockMovement>> GetStockMovementByProductIdAsync(int id);
+        Task<IEnumerable<StockMovement>> GetStockMovementsByProductNameAsync(string productName);
+        Task<IEnumerable<StockMovement>> GetStockMovementsAsync();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
