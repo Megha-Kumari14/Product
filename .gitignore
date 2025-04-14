@@ -563,7 +563,7 @@ export class AddStockMovementComponent {
   }
 }
 
-add-stock-movement.component.hl:
+9)add-stock-movement.component.html:
 
 <app-layout-header></app-layout-header>
 <div class="container mt-4">
@@ -1021,281 +1021,6 @@ namespace Pim.Application.Models
 }
 
 4)ReplenishmentRuleService.cs :
-// using Pim.Core.Entities;
-// using Pim.Core.Repositories;
-// using Pim.Application.Models;
-// using System.Collections.Generic;
-// using System.Linq;
-// using System.Threading.Tasks;
-// using System;
-// using Pim.Application.Interfaces;
-
-// namespace Pim.Application.Services
-// {
-//     public class ReplenishmentRuleService : IReplenishmentRuleService
-//     {
-//         private readonly IReplenishmentRuleRepository _replenishmentRuleRepository;
-        
-//         public ReplenishmentRuleService(IReplenishmentRuleRepository replenishmentRuleRepository)
-//         {
-//             _replenishmentRuleRepository = replenishmentRuleRepository;
-//         }
-
-//         public async Task<List<ReplenishmentRuleDto>> GetAllReplenishmentRulesAsync()
-//         {
-//             var rules = await _replenishmentRuleRepository.GetAllReplenishmentRulesAsync();
-//             return rules.Select(rr => new ReplenishmentRuleDto
-//             {
-//                 ProductId = rr.ProductId,
-//                 MinThreshold = rr.MinThreshold,
-//                 MaxThreshold = rr.MaxThreshold,
-//                 ReorderQuantity = rr.ReorderQuantity,
-//                 SupplierId = rr.SupplierId,
-//                 CreatedAt = rr.CreatedAt
-//             }).ToList();
-//         }
-
-//         public async Task<ReplenishmentRuleDto> GetReplenishmentRuleByProductIdAsync(int productId)
-//         {
-//             var rule = await _replenishmentRuleRepository.GetReplenishmentRuleByProductIdAsync(productId);
-//             if (rule == null)
-//                 return null;
-
-//             return new ReplenishmentRuleDto
-//             {
-//                 ProductId = rule.ProductId,
-//                 MinThreshold = rule.MinThreshold,
-//                 MaxThreshold = rule.MaxThreshold,
-//                 ReorderQuantity = rule.ReorderQuantity,
-//                 SupplierId = rule.SupplierId,
-//                 CreatedAt = rule.CreatedAt
-//             };
-//         }
-
-//         public async Task<ReplenishmentRuleDto> CreateReplenishmentRuleAsync(ReplenishmentRuleDto replenishmentRuleDto)
-//         {
-//             var replenishmentRule = new ReplenishmentRule
-//             {
-//                 ProductId = replenishmentRuleDto.ProductId,
-//                 MinThreshold = replenishmentRuleDto.MinThreshold,
-//                 MaxThreshold = replenishmentRuleDto.MaxThreshold,
-//                 ReorderQuantity = replenishmentRuleDto.ReorderQuantity,
-//                 SupplierId = replenishmentRuleDto.SupplierId,
-//                 CreatedAt = DateTime.UtcNow
-//             };
-
-//             var createdRule = await _replenishmentRuleRepository.CreateReplenishmentRuleAsync(replenishmentRule);
-
-//             return new ReplenishmentRuleDto
-//             {
-//                 ProductId = createdRule.ProductId,
-//                 MinThreshold = createdRule.MinThreshold,
-//                 MaxThreshold = createdRule.MaxThreshold,
-//                 ReorderQuantity = createdRule.ReorderQuantity,
-//                 SupplierId = createdRule.SupplierId,
-//                 CreatedAt = createdRule.CreatedAt
-//             };
-//         }
-//     }
-// }
-
-
-
-
-
-
-
-
-// using Microsoft.AspNetCore.SignalR;
-// using Pim.Core.Entities;
-// using Pim.Core.Repositories;
-// using Pim.Application.Models;
-// using Pim.Application.Interfaces;
-// using System.Threading.Tasks;
-// using System.Collections.Generic;
-// using Pim.Application.Services;
-
-// namespace Pim.Application.Services
-// {
-//     public class ReplenishmentRuleService : IReplenishmentRuleService
-//     {
-//         private readonly IReplenishmentRuleRepository _replenishmentRuleRepository;
-//         private readonly IHubContext<ReorderHub> _hubContext;
-//         private readonly IStockRepository _stockRepository; // Injecting IStockRepository
-
-//         // Constructor Injection
-//         public ReplenishmentRuleService(
-//             IReplenishmentRuleRepository replenishmentRuleRepository,
-//             IHubContext<ReorderHub> hubContext,
-//             IStockRepository stockRepository) // Adding stockRepository
-//         {
-//             _replenishmentRuleRepository = replenishmentRuleRepository;
-//             _hubContext = hubContext;
-//             _stockRepository = stockRepository; // Storing stockRepository
-//         }
-
-//         public Task<ReplenishmentRuleDto> CreateReplenishmentRuleAsync(ReplenishmentRuleDto replenishmentRuleDto)
-//         {
-//             throw new System.NotImplementedException();
-//         }
-
-//         public Task<List<ReplenishmentRuleDto>> GetAllReplenishmentRulesAsync()
-//         {
-//             throw new System.NotImplementedException();
-//         }
-
-//         public async Task<ReplenishmentRuleDto> GetReplenishmentRuleByProductIdAsync(int productId)
-//         {
-//             var rule = await _replenishmentRuleRepository.GetReplenishmentRuleByProductIdAsync(productId);
-//             if (rule == null) return null;
-
-//             // Check stock and send notifications
-//             await CheckStockAndNotify(rule);
-
-//             return new ReplenishmentRuleDto
-//             {
-//                 ProductId = rule.ProductId,
-//                 MinThreshold = rule.MinThreshold,
-//                 MaxThreshold = rule.MaxThreshold,
-//                 ReorderQuantity = rule.ReorderQuantity,
-//                 SupplierId = rule.SupplierId,
-//                 CreatedAt = rule.CreatedAt
-//             };
-//         }
-
-//         private async Task CheckStockAndNotify(ReplenishmentRule rule)
-//         {
-//             // Fetch current stock from the repository using GetProductStockAsync
-//             var productStock = await _stockRepository.GetProductStockAsync(rule.ProductId);
-            
-//             if (productStock == null)
-//             {
-//                 // If no stock information is found for the product, handle accordingly
-//                 await _hubContext.Clients.All.SendAsync("ReceiveOutOfStockNotification", $"Product ID {rule.ProductId} has no stock information.");
-//                 return;
-//             }
-
-//             int currentStock = productStock.Quantity;
-
-//             // Check if stock is below the threshold and trigger reorder notification
-//             if (currentStock < rule.MinThreshold)
-//             {
-//                 string reorderMessage = $"Reorder placed for Product ID {rule.ProductId}. Stock is below threshold.";
-//                 await _hubContext.Clients.All.SendAsync("ReceiveReorderNotification", reorderMessage);
-//             }
-
-//             // Check if stock is zero and trigger out-of-stock notification
-//             if (currentStock == 0)
-//             {
-//                 string outOfStockMessage = $"Product ID {rule.ProductId} is out of stock.";
-//                 await _hubContext.Clients.All.SendAsync("ReceiveOutOfStockNotification", outOfStockMessage);
-//             }
-//         }
-//     }
-// }
-
-
-
-// using Pim.Core.Entities;
-// using Pim.Core.Repositories;
-// using Pim.Application.Models;
-// using System.Collections.Generic;
-// using System.Linq;
-// using System.Threading.Tasks;
-// using System;
-// using Pim.Application.Interfaces;
-
-// namespace Pim.Application.Services
-// {
-//     public class ReplenishmentRuleService : IReplenishmentRuleService
-//     {
-//         private readonly IReplenishmentRuleRepository _replenishmentRuleRepository;
-//         private readonly IStockRepository _stockRepository;  // Inject IStockRepository
-
-//         public ReplenishmentRuleService(
-//             IReplenishmentRuleRepository replenishmentRuleRepository, 
-//             IStockRepository stockRepository)
-//         {
-//             _replenishmentRuleRepository = replenishmentRuleRepository;
-//             _stockRepository = stockRepository;  // Initialize IStockRepository
-//         }
-
-//         public async Task<List<ReplenishmentRuleDto>> GetAllReplenishmentRulesAsync()
-//         {
-//             var rules = await _replenishmentRuleRepository.GetAllReplenishmentRulesAsync();
-//             return rules.Select(rr => new ReplenishmentRuleDto
-//             {
-//                 ProductId = rr.ProductId,
-//                 MinThreshold = rr.MinThreshold,
-//                 MaxThreshold = rr.MaxThreshold,
-//                 ReorderQuantity = rr.ReorderQuantity,
-//                 SupplierId = rr.SupplierId,
-//                 CreatedAt = rr.CreatedAt
-//             }).ToList();
-//         }
-
-//         public async Task<ReplenishmentRuleDto> GetReplenishmentRuleByProductIdAsync(int productId)
-//         {
-//             var rule = await _replenishmentRuleRepository.GetReplenishmentRuleByProductIdAsync(productId);
-//             if (rule == null)
-//                 return null;
-
-//             return new ReplenishmentRuleDto
-//             {
-//                 ProductId = rule.ProductId,
-//                 MinThreshold = rule.MinThreshold,
-//                 MaxThreshold = rule.MaxThreshold,
-//                 ReorderQuantity = rule.ReorderQuantity,
-//                 SupplierId = rule.SupplierId,
-//                 CreatedAt = rule.CreatedAt
-//             };
-//         }
-
-//         public async Task<ReplenishmentRuleDto> CreateReplenishmentRuleAsync(ReplenishmentRuleDto replenishmentRuleDto)
-//         {
-//             // Check stock quantity before creating replenishment rule
-//             var stock = await _stockRepository.GetProductStockAsync(replenishmentRuleDto.ProductId);
-//             if (stock == null)
-//             {
-//                 throw new Exception("Product stock not found.");
-//             }
-
-//             // Check if stock is below the MinThreshold
-//             if (stock.Quantity <= replenishmentRuleDto.MinThreshold)
-//             {
-//                 // Trigger auto-reorder or other appropriate action
-//                 Console.WriteLine($"Auto reorder triggered for ProductId: {replenishmentRuleDto.ProductId}, " +
-//                                   $"Current stock: {stock.Quantity}, MinThreshold: {replenishmentRuleDto.MinThreshold}");
-                
-//                 // Optionally, you can initiate a reorder request here or notify an admin
-//             }
-
-//             var replenishmentRule = new ReplenishmentRule
-//             {
-//                 ProductId = replenishmentRuleDto.ProductId,
-//                 MinThreshold = replenishmentRuleDto.MinThreshold,
-//                 MaxThreshold = replenishmentRuleDto.MaxThreshold,
-//                 ReorderQuantity = replenishmentRuleDto.ReorderQuantity,
-//                 SupplierId = replenishmentRuleDto.SupplierId,
-//                 CreatedAt = DateTime.UtcNow
-//             };
-
-//             var createdRule = await _replenishmentRuleRepository.CreateReplenishmentRuleAsync(replenishmentRule);
-
-//             return new ReplenishmentRuleDto
-//             {
-//                 ProductId = createdRule.ProductId,
-//                 MinThreshold = createdRule.MinThreshold,
-//                 MaxThreshold = createdRule.MaxThreshold,
-//                 ReorderQuantity = createdRule.ReorderQuantity,
-//                 SupplierId = createdRule.SupplierId,
-//                 CreatedAt = createdRule.CreatedAt
-//             };
-//         }
-//     }
-// }
-
-
 using Pim.Application.Hubs;
 using Pim.Application.Interfaces;
 using Pim.Core.Entities;
@@ -2232,10 +1957,99 @@ namespace Pim.Application.Interfaces
 
 
 
+/src
+│
+├── /app
+│   ├── /components
+│   │   ├── /replenishment-form
+│   │   │   ├── replenishment-form.component.ts   # Component to create a replenishment rule
+│   │   │   └── replenishment-form.component.html # Form for creating a replenishment rule
+│   │   ├── /replenishment-table
+│   │   │   ├── replenishment-table.component.ts  # Component to display a list of replenishment rules
+│   │   │   └── replenishment-table.component.html # Table to display replenishment rules
+│   │   └── /notification
+│   │       ├── notification.component.ts         # Component to display notifications (real-time alerts)
+│   │       └── notification.component.html        # HTML for notification display
+│   ├── /models
+│   │   └── replenishment.ts                      # Model for ReplenishmentRule (same as in backend)
+│   ├── /services
+│   │   ├── replenishment.service.ts              # Service to interact with the replenishment API
+│   │   └── notification.service.ts               # Service for managing SignalR notifications
+│   ├── /app-routing.module.ts                    # Routing configuration
+│   ├── /app.component.ts                         # Main App component
+│   └── /app.module.ts                            # Main app module
+│
+├── /assets
+│   └── /images                                   # Image assets (if needed)
+│
+├── /environments
+│   ├── environment.ts                            # Environment-specific settings (API URL, etc.)
+│   └── environment.prod.ts                      # Production settings
+│
+└── /index.html                                  # Main HTML file
 
 
 
 
+
+
+
+
+/src
+│
+├── /Controllers
+│   ├── StockController.cs            # API to manage replenishment rules
+│   ├── NotificationController.cs     # API to manage stock alerts or notifications
+│   └── AuthController.cs            # API for authentication (if needed)
+│
+├── /Hubs
+│   └── NotificationHub.cs           # SignalR hub for sending real-time notifications
+│
+├── /Models
+│   ├── ReplenishmentRule.cs         # Model for Replenishment Rule
+│   └── StockMovement.cs             # Model for Stock Movement
+│
+├── /Services
+│   ├── ReplenishmentRuleService.cs  # Service for managing replenishment rules
+│   ├── StockMovementService.cs      # Service for handling stock movements
+│   └── NotificationService.cs       # Service for sending notifications via SignalR
+│
+├── /Repositories
+│   ├── IReplenishmentRuleRepository.cs  # Interface for the Replenishment Rule repo
+│   ├── IStockMovementRepository.cs      # Interface for the Stock Movement repo
+│   └── NotificationRepository.cs        # Repository for handling stock alerts (optional)
+│
+├── /Data
+│   ├── ApplicationDbContext.cs     # EF Core DbContext for interacting with the DB
+│   └── SeedData.cs                 # Seed data for database initialization (optional)
+│
+├── /DTOs
+│   ├── ReplenishmentRuleDTO.cs     # DTO for Replenishment Rule (data transfer object)
+│   └── StockMovementDTO.cs         # DTO for Stock Movement
+│
+├── /Configuration
+│   ├── SignalRConfig.cs            # Configuration for SignalR
+│
+├── /Migrations
+│   └── <migration-files>           # EF Core migration files (if any)
+│
+├── Program.cs                      # Application entry point
+└── Startup.cs 
+
+
+
+
+
+[HttpGet("check-stock/{productId}")]
+public async Task<ActionResult<int>> GetStockQuantityByProductId(int productId)
+{
+    var stock = await _stockRepository.GetProductStockAsync(productId);
+    if (stock == null)
+    {
+        return NotFound($"No stock found for ProductId {productId}");
+    }
+    return Ok(stock.Quantity); // Returns the current stock quantity for the product
+}
 
 
 
