@@ -59,3 +59,314 @@
     "strictTemplates": true
   }
 }
+
+
+
+To replace the ProductId field with an SKU text field in your replenishment form and table, while keeping the relationship with the ProductId intact, you can follow this general approach:
+
+Steps:
+Retrieve SKU and Associate with ProductId:
+On the frontend, allow the user to input an SKU (text field).
+When submitting the form, you'll need to convert this SKU into the corresponding ProductId.
+This can be done by querying the backend for the ProductId associated with the provided SKU.
+Update Form:
+Replace the ProductId field with an SKU text field in the form.
+Use a service method to validate and fetch the ProductId based on the entered SKU.
+Update Backend:
+Modify the backend API to accept an SKU and return the corresponding ProductId when creating a replenishment rule.
+Ensure that if an invalid SKU is provided (i.e., one that does not exist or is not unique), you return a 404 Not Found or appropriate error message.
+Frontend Validation and Submission:
+Before submitting the replenishment rule, you will first need to verify if the SKU exists in the product database.
+After validation, the ProductId is sent to the backend instead of the SKU.
+Update the Replenishment Rule Table:
+Display the SKU instead of the ProductId in the table for better user readability.
+Detailed Implementation:
+1. Frontend Changes
+
+a) replenishment-form.component.ts
+Add a method to fetch the ProductId from the backend based on the SKU.
+
+import { Component, OnInit } from '@angular/core';
+import { ReplenishmentRule } from '@models/replenishment';
+import { ReplenishmentRuleService } from '@services/replenishment.service';
+import { Router } from '@angular/router';
+import { ProductService } from '@services/product.service'; // Assuming a product service exists
+
+@Component({
+  selector: 'app-replenishment-form',
+  templateUrl: './replenishment-form.component.html',
+  styleUrls: ['./replenishment-form.component.scss']
+})
+export class ReplenishmentFormComponent implements OnInit {
+
+  replenishmentRule: ReplenishmentRule = {
+    productId: 0,
+    minThreshold: 0,
+    maxThreshold: 0,
+    reorderQuantity: 0,
+    supplierId: 0,
+    createdAt: new Date()
+  };
+  errorMessage: string = '';
+  sku: string = '';  // SKU text field
+  errorSkuMessage: string = '';  // For SKU validation error
+
+  constructor(
+    private replenishmentRuleService: ReplenishmentRuleService,
+    private productService: ProductService,  // Injecting product service
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {}
+
+  onSubmit(): void {
+    if (this.sku) {
+      this.productService.getProductIdBySKU(this.sku).subscribe({
+        next: (productId) => {
+          this.replenishmentRule.productId = productId;
+          this.createReplenishmentRule();
+        },
+        error: (error) => {
+          this.errorSkuMessage = 'Invalid SKU. Please check and try again.';
+          console.error('SKU lookup error:', error);
+        }
+      });
+    } else {
+      this.errorSkuMessage = 'SKU is required.';
+    }
+  }
+
+  private createReplenishmentRule(): void {
+    this.replenishmentRuleService.createReplenishmentRule(this.replenishmentRule).subscribe({
+      next: (data) => {
+        alert('Replenishment rule created successfully!');
+        this.router.navigate(['/replenishment']);
+      },
+      error: (error) => {
+        this.errorMessage = 'Error creating replenishment rule. Please try again.';
+        console.error('Error creating replenishment rule:', error);
+      }
+    });
+  }
+}
+
+
+b) replenishment-form.component.html
+Replace the ProductId input field with an SKU text input.
+<app-layout-header></app-layout-header>
+<h2 class="text-center my-5">Add Replenishment Rule</h2>
+
+<form (ngSubmit)="onSubmit()" #replenishmentForm="ngForm" class="border rounded p-5 w-50 mb-5 mx-auto">
+
+  <div *ngIf="errorMessage" class="text-danger">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="errorSkuMessage" class="text-danger">
+    {{ errorSkuMessage }}
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">SKU*</label>
+    <input required class="form-control" type="text" name="sku" [(ngModel)]="sku" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Minimum Threshold*</label>
+    <input required class="form-control" type="number" name="minThreshold" [(ngModel)]="replenishmentRule.minThreshold" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Maximum Threshold*</label>
+    <input required class="form-control" type="number" name="maxThreshold" [(ngModel)]="replenishmentRule.maxThreshold" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Reorder Quantity*</label>
+    <input required class="form-control" type="number" name="reorderQuantity" [(ngModel)]="replenishmentRule.reorderQuantity" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Supplier ID*</label>
+    <input required class="form-control" type="number" name="supplierId" [(ngModel)]="replenishmentRule.supplierId" />
+  </div>
+
+  <button class="btn btn-primary" type="submit" [disabled]="replenishmentForm.invalid">Create Rule</button>
+</form>
+
+
+
+2. Backend Changes
+
+a) ProductService
+You’ll need a service method in the ProductService to fetch the ProductId by SKU. Here’s how you could implement that:
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ProductService {
+
+  private apiUrl = 'http://localhost:5000/api/products';  // Assuming the products API endpoint
+
+  constructor(private http: HttpClient) {}
+
+  // Fetch ProductId by SKU
+  getProductIdBySKU(sku: string): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/getProductIdBySKU/${sku}`);
+  }
+}
+
+b) ProductController (Backend)
+Add a new endpoint in your ProductController to retrieve the ProductId using the SKU:
+
+[Route("api/products")]
+[ApiController]
+public class ProductController : ControllerBase
+{
+    private readonly IProductService _productService;
+
+    public ProductController(IProductService productService)
+    {
+        _productService = productService;
+    }
+
+    [HttpGet("getProductIdBySKU/{sku}")]
+    public async Task<ActionResult<int>> GetProductIdBySKU(string sku)
+    {
+        var product = await _productService.GetProductBySKUAsync(sku);
+        if (product == null)
+        {
+            return NotFound("Product not found for the given SKU.");
+        }
+        return Ok(product.ProductId);
+    }
+}
+
+c) ProductService (Backend)
+In your ProductService, implement the logic to fetch the product by SKU:
+
+public class ProductService : IProductService
+{
+    private readonly IProductRepository _productRepository;
+
+    public ProductService(IProductRepository productRepository)
+    {
+        _productRepository = productRepository;
+    }
+
+    public async Task<Product> GetProductBySKUAsync(string sku)
+    {
+        return await _productRepository.GetProductBySKUAsync(sku);
+    }
+}
+
+
+d) ProductRepository (Backend)
+In the ProductRepository, query the database for the product using SKU:
+
+public class ProductRepository : IProductRepository
+{
+    private readonly AppDbContext _context;
+
+    public ProductRepository(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Product> GetProductBySKUAsync(string sku)
+    {
+        return await _context.Products
+            .Where(p => p.SKU == sku)
+            .FirstOrDefaultAsync();
+    }
+}
+
+3. Display SKU in the Table
+
+In replenishment-table.component.ts and replenishment-table.component.html, you can display the SKU instead of the ProductId.
+
+a) replenishment-table.component.ts:
+
+import { Component, OnInit } from '@angular/core';
+import { ReplenishmentRule } from '@models/replenishment';
+import { ReplenishmentRuleService } from '@services/replenishment.service';
+import { Router } from '@angular/router';
+import { ProductService } from '@services/product.service';  // Inject the product service
+
+@Component({
+  selector: 'app-replenishment-table',
+  templateUrl: './replenishment-table.component.html',
+  styleUrls: ['./replenishment-table.component.scss']
+})
+export class ReplenishmentTableComponent implements OnInit {
+
+  replenishmentRules: ReplenishmentRule[] = [];
+  products: any = [];  // To store SKU lookup
+
+  constructor(
+    private replenishmentRuleService: ReplenishmentRuleService,
+    private productService: ProductService, // Injecting product service
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.replenishmentRuleService.getAllReplenishmentRules().subscribe({
+      next: (data) => {
+        this.replenishmentRules = data;
+        this.loadProductSKUs();
+      },
+      error: (error) => {
+        console.error('Error fetching replenishment rules:', error);
+      }
+    });
+  }
+
+  private loadProductSKUs(): void {
+    this.replenishmentRules.forEach(rule => {
+      this.productService.getProductIdBySKU(rule.productId).subscribe(sku => {
+        rule.sku = sku;  // Add SKU to rule data for display
+      });
+    });
+  }
+
+  onAddReplenishment(): void {
+    this.router.navigate(['/replenishment/add']);
+  }
+}
+
+b) replenishment-table.component.html:
+
+<table class="table table-hover" *ngIf="replenishmentRules.length > 0">
+  <thead>
+    <tr>
+      <th>SKU</th>
+      <th>Min Threshold</th>
+      <th>Max Threshold</th>
+      <th>Reorder Quantity</th>
+      <th>Supplier ID</th>
+      <th>Created At</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let rule of replenishmentRules">
+      <td>{{rule.sku}}</td>  <!-- Display SKU -->
+      <td>{{rule.minThreshold}}</td>
+      <td>{{rule.maxThreshold}}</td>
+      <td>{{rule.reorderQuantity}}</td>
+      <td>{{rule.supplierId}}</td>
+      <td>{{rule.createdAt | date}}</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+Summary of Changes:
+Frontend: Replace the ProductId field with an SKU text field.
+Backend: Implement an endpoint to fetch ProductId from SKU.
+Validation: Ensure SKU is valid before submitting
+
+
+
+
+
