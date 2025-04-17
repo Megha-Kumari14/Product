@@ -94,3 +94,1147 @@
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Configure Stock Movement Statuses
+
+User Story:
+As an user, I want to manage Stock Movement Statuses so that I can make Stock Movement Type to use the Statuses.
+
+Technical Considerations:
+
+API Endpoint:
+GET /api/stock/stockmovementstatuses
+POST /api/stock/savestockmovementstatus (Add/ Update stock movement status)
+Database Schema (StockMovementStatuses Table):
+MovementStatusID (PK), Name, Description, Version,  UpdatedAt
+Validation:
+Name should be unique
+
+1)StockMovement model
+using System;
+using Pim.Core.Entities.Base;
+
+namespace Pim.Core.Entities
+{
+    public class StockMovementStatus : Entity
+    {
+        public StockMovementStatus()
+        {
+            UpdatedAt = DateTime.UtcNow;
+        }  
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int Version { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        
+        public static StockMovementStatus Create(int movementStatusId, string name, string description, int version, DateTime updatedAt )
+        {
+            var stockMovementStatus = new StockMovementStatus
+            {
+                Id = movementStatusId,
+                Name = name,
+                Description = description,
+                Version = version,
+                UpdatedAt = updatedAt
+
+            };
+            return stockMovementStatus;
+        }
+    }
+}
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Pim.Application.Models;
+using Pim.Core.Entities;
+
+namespace Pim.Application.Interfaces
+{
+    public interface ISupplierService
+    {
+        //Suppliers Task Declaration
+        Task<IEnumerable<SupplierDto>> GetSuppliersListAsync();
+        Task<SupplierDto> GetSupplierByIdAsync(int supplierId);
+        Task<SupplierDto> AddSuppliersAsync(SupplierDto supplierModel);
+        Task<SupplierDto> UpdateSuppliersAsync(SupplierDto supplierModel);
+        Task<SupplierDto> DeleteSuppliersAsync(int supplierId);
+    }
+}
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Pim.Application.Models.Base;
+
+namespace Pim.Application.Models
+{
+    public class SupplierDto : BaseModel
+    {
+        public string SupplierName { get; set; }
+        public string Country { get; set; }
+        public string ContactInfo { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
+    }
+}
+
+
+
+
+
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Pim.Application.Interfaces;
+using Pim.Application.Mapper;
+using Pim.Application.Models;
+using Pim.Core.Entities;
+using Pim.Core.Repositories;
+namespace Pim.Application.Services
+{
+    public class SupplierService :ISupplierService
+    {
+        private readonly ISupplierRepository _supplierRepository;
+
+        public SupplierService(ISupplierRepository supplierRepository)
+        {
+            _supplierRepository = supplierRepository ?? throw new ArgumentNullException(nameof(supplierRepository));
+        }
+        public async Task<SupplierDto> AddSuppliersAsync(SupplierDto supplierModel)
+        {
+            var mappedEntity = ObjectMapper.Mapper.Map<Supplier>(supplierModel);
+            if (mappedEntity == null)
+                throw new ApplicationException($"Entity could not be mapped.");
+
+            var newEntity = await _supplierRepository.AddSuppliersAsync(mappedEntity);
+            //TODO - logger addup
+            var newMappedEntity = ObjectMapper.Mapper.Map<SupplierDto>(newEntity);
+            return newMappedEntity;
+
+        }
+
+        public async Task<SupplierDto> DeleteSuppliersAsync(int supplierId)
+        {
+            var supplier =await _supplierRepository.DeleteSuppliersAsync(supplierId);
+            var map = ObjectMapper.Mapper.Map<SupplierDto>(supplier);
+            return map;
+            //TODO - logger add up
+        }
+
+        public async Task<SupplierDto> GetSupplierByIdAsync(int supplierId)
+        {
+            var supplier = await _supplierRepository.GetSupplierByIdAsync(supplierId);
+            var map = ObjectMapper.Mapper.Map<SupplierDto>(supplier);
+            //TODO - logger add up
+            return map;
+        }
+
+        public async Task<IEnumerable<SupplierDto>> GetSuppliersListAsync()
+        {
+            var supplierList = await _supplierRepository.GetSuppliersListAsync();
+            var mapped = ObjectMapper.Mapper.Map<IEnumerable<SupplierDto>>(supplierList);
+            return mapped;
+            //TODO - logger add up
+        }
+
+        public async Task<SupplierDto> UpdateSuppliersAsync(SupplierDto supplierModel)
+        {
+            var mappedEntity = ObjectMapper.Mapper.Map<Supplier>(supplierModel);
+            if (mappedEntity == null)
+                throw new ApplicationException($"Entity could not be mapped.");
+           
+            var result = await _supplierRepository.UpdateSuppliersAsync(mappedEntity);
+            //TODO - logger add up
+            var mapped = ObjectMapper.Mapper.Map<SupplierDto>(result);
+            return mapped;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Pim.Core.Entities.Base;
+
+namespace Pim.Core.Entities
+{
+    public class Supplier :Entity
+    {
+        public Supplier() { }   
+
+        public string SupplierName {  get; set; }
+        public string Country {  get; set; }
+
+        [RegularExpression(@"^\+?\d{1,15}$", ErrorMessage = "Please enter valid contactinfo.")]
+        public string ContactInfo {  get; set; }
+
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+
+        public static Supplier create(int supplierId,string name,string country,string contact,DateTime createdAt ,DateTime? updatedAt = null)
+        {
+            var supplier = new Supplier
+            {
+                Id = supplierId,
+                SupplierName = name,
+                Country = country,
+                ContactInfo = contact,
+                CreatedAt = createdAt,
+                UpdatedAt = updatedAt
+            };
+            return supplier;
+        }
+    }
+}
+
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Pim.Core.Entities;
+using Pim.Core.Repositories.Base;
+
+namespace Pim.Core.Repositories
+{
+    public interface ISupplierRepository : IRepository<Supplier>
+    {
+        Task<IEnumerable<Supplier>> GetSuppliersListAsync();
+        Task<Supplier> GetSupplierByIdAsync(int supplierId);
+        Task<Supplier> AddSuppliersAsync(Supplier supplier);
+        Task<Supplier> UpdateSuppliersAsync(Supplier supplier);
+        Task<Supplier> DeleteSuppliersAsync(int supplierId);
+
+    }
+}
+
+
+
+using Pim.Core.Entities;
+using Pim.Core.Repositories;
+using Pim.Core.Specifications;
+using Pim.Infrastructure.Data;
+using Pim.Infrastructure.Repository.Base;
+using Microsoft.EntityFrameworkCore;
+using Pim.Application.Exceptions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Pim.Infrastructure.Repository
+{
+    public class SupplierRepository : Repository<Supplier>, ISupplierRepository
+    {
+        public SupplierRepository(PIMContext dbContext) : base(dbContext)
+        {
+        }
+
+        public async Task<Supplier> AddSuppliersAsync(Supplier supplier)
+        {
+            await _dbContext.Suppliers.AddAsync(supplier);
+            await _dbContext.SaveChangesAsync();
+            return supplier;
+        }
+
+        public async Task<Supplier> DeleteSuppliersAsync(int supplierId)
+        {
+           
+            var deleteSupplier = await _dbContext.Suppliers.FirstOrDefaultAsync(s => s.Id == supplierId);
+
+            if (deleteSupplier is null)
+            {
+                throw new EntityNotFoundException();
+            }
+            _dbContext.Suppliers.Remove(deleteSupplier);
+            await _dbContext.SaveChangesAsync();
+            return deleteSupplier;
+
+
+        }
+
+        public async Task<Supplier> GetSupplierByIdAsync(int supplierId)
+        {
+            return await _dbContext.Suppliers.FirstOrDefaultAsync(s => s.Id == supplierId);
+        }
+
+        public async Task<IEnumerable<Supplier>> GetSuppliersListAsync()
+        {
+            return await _dbContext.Suppliers.ToListAsync();
+        }
+
+        public async Task<Supplier> UpdateSuppliersAsync(Supplier supplier)
+        {
+
+            _dbContext.Suppliers.Update(supplier);
+            await _dbContext.SaveChangesAsync();
+
+            return supplier;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Pim.Application.Exceptions;
+using Pim.Application.Interfaces;
+using Pim.Application.Models;
+using Pim.Core.Entities;
+using Pim.WebAPI.Filters;
+
+namespace Pim.WebAPI.Controllers
+{
+    [ApiController]
+    [Route("api/suppliers")]
+    public class SupplierController : ControllerBase
+    {
+        private readonly ISupplierService _supplierService;
+
+        public SupplierController(ISupplierService supplierService)
+        {
+            _supplierService = supplierService;
+        }
+
+        /// <summary>
+        /// Gets the suppliers list
+        /// </summary>
+        /// <returns>list of supppliers available in database</returns>
+        [PimAuthorize("admin", "user")]
+
+        [HttpGet]
+        
+        public async Task<ActionResult> GetSuppliersListAsync()
+        {
+            try
+            {
+                return Ok(await _supplierService.GetSuppliersListAsync());
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retriving data from database." + e);
+            }
+        }
+
+        /// <summary>
+        /// Get supplier info by Id
+        /// </summary>
+        /// <param name="id">SupplierId</param>
+        /// <returns>data matched with supplier's id</returns>
+        [PimAuthorize("admin")]
+        [HttpGet("{id}")]
+        
+        public async Task<ActionResult<SupplierDto>> GetSuppliersByIdAsync(int id)
+        {
+            try
+            {
+                return Ok(await _supplierService.GetSupplierByIdAsync(id));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retriving data from database." + e);
+            }
+        }
+
+        /// <summary>
+        /// Gets the new supplier data
+        /// </summary>
+        /// <param name="supplierModel">The <see cref="SupplierDto"/></param>
+        /// <returns>New <see cref="SupplierDto"/></returns>
+        [PimAuthorize("admin")]
+        [HttpPost]
+        
+        public async Task<ActionResult<SupplierDto>> AddSuppliersAsync([FromBody]SupplierDto supplierModel)
+        {
+            try
+            {
+                if (supplierModel == null)
+                {
+                    return BadRequest();
+                }
+                var result = await _supplierService.AddSuppliersAsync(supplierModel);
+
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retriving data from database." + e);
+            }
+        }
+
+        /// <summary>
+        /// Gets updated supplier data
+        /// </summary>
+        /// <param name="supplierModel">The <see cref="SupplierDto"/></param>
+        /// <returns>Updated <see cref="SupplierDto"/></returns>
+        [PimAuthorize("admin")]
+        [HttpPut]
+        
+        public async Task UpdateSuppliersAsync([FromBody] SupplierDto supplierModel)
+        {
+            try
+            {
+                if (supplierModel == null)
+                {
+                    NotFound($"Supplier  not found");
+                }
+                else
+                {
+                    await _supplierService.UpdateSuppliersAsync(supplierModel);
+                }
+                
+            }
+            catch (Exception e)
+            {
+                StatusCode(StatusCodes.Status500InternalServerError, "Error retriving data from database." + e);
+
+            }
+        }
+
+        /// <summary>
+        /// Gets the Id for Delete
+        /// </summary>
+        /// <param name="supplierId">SupplierId</param>
+        [PimAuthorize("admin")]
+        [HttpDelete("{supplierId}")]
+        public async Task DeleteSuppliersAsync(int supplierId)
+        {
+            try
+            {
+                await _supplierService.DeleteSuppliersAsync(supplierId);
+            }
+            catch (EntityNotFoundException ex)
+            {
+                NotFound("Entity not found.");
+            }
+            catch (Exception e)
+            {
+                StatusCode(StatusCodes.Status500InternalServerError, "Error retriving data from database." + e);
+
+            }
+
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+frontend:
+export interface Supplier {
+  id: number,
+  supplierName: string,
+  country: string,
+  contactInfo: string,
+  createdAt: Date,
+  updatedAt: Date
+
+}
+
+//Angular Modules
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, observable } from 'rxjs';
+
+//Models
+import { Supplier } from '@models/supplier.model';
+import { log } from 'console';
+import { environment } from '@env/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class SupplierService {
+
+  private readonly baseUrl = `${environment.apiBaseUrl}/suppliers`;
+  constructor(private httpclient : HttpClient) { }
+
+  //All methods
+  public getSupplier():Observable<Supplier[]>
+  {
+    const url : string = `${this.baseUrl}`;
+    console.log(url);
+    return this.httpclient.get<Supplier[]>(url);
+  }
+  public getSupplierById(id:any):Observable<Supplier>
+  {
+    return this.httpclient.get<Supplier>(`${this.baseUrl}/${id}`);
+  }
+  public addSupplier(data:any)
+  {
+    return this.httpclient.post(`${this.baseUrl}`,data);
+  }
+  public updateSupplier(Supplier:any):Observable<any>
+  {
+    return this.httpclient.put<any>(`${this.baseUrl}`,Supplier);
+  }
+  public deleteSupplier(data:any) : Observable<any>
+  {
+    return this.httpclient.delete<any>(`${this.baseUrl}/${data}`);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+0supplier
+  1supplier-info
+    2add-supplier:
+      <div class="container mt-4">
+  <h2 class="mb-4 text-center">Add Supplier</h2>
+
+  <!-- NOTE : Add Supplier Form -->
+  <form [formGroup]="addSupplierFormGroup" (ngSubmit)="onSubmit()" class="w-50 mx-auto">
+    <!-- NOTE : Name -->
+    <div class="mb-3">
+      <label for="floatingInput" class="form-label">{{'Supplier Name' | translate}}</label>
+      <input
+        type="text"
+        class="form-control"
+        id="floatingInput"
+        placeholder="Enter Supplier Name"
+        formControlName="supplierName"
+        [(ngModel)]="formObject.supplierName"
+      />
+      <!-- NOTE : Errors -->
+      <div *ngIf="addSupplierFormGroup.get('supplierName')?.touched && addSupplierFormGroup.get('supplierName')?.invalid">
+        <div *ngIf="addSupplierFormGroup.get('supplierName')?.hasError('required')" class="text-danger">
+          {{ 'FIELD_REQUIRED' | translate }}
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTE : Country -->
+    <div class="mb-3">
+      <label for="floatingInput" class="form-label">{{'Country' | translate}}</label>
+      <input
+        type="text"
+        class="form-control"
+        id="floatingInput"
+        placeholder="Ex Like : India,USA,UK"
+        formControlName="country"
+        [(ngModel)]="formObject.country"
+      />
+      <!-- NOTE : Errors -->
+      <div *ngIf="addSupplierFormGroup.get('country')?.touched && addSupplierFormGroup.get('country')?.invalid">
+        <div *ngIf="addSupplierFormGroup.get('country')?.hasError('required')" class="text-danger">
+          {{ 'FIELD_REQUIRED' | translate }}
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTE : Contact -->
+    <div class="mb-3">
+      <label for="floatingInput" class="form-label">{{'Contact Info' | translate}}</label>
+      <input
+        type="text"
+        class="form-control"
+        id="floatingInput"
+        placeholder="1234567890"
+        formControlName="contactInfo"
+        [(ngModel)]="formObject.contactInfo"
+      />
+      <!-- NOTE : Errors -->
+      <div *ngIf="addSupplierFormGroup.get('contactInfo')?.touched && addSupplierFormGroup.get('contactInfo')?.invalid">
+        <div *ngIf="addSupplierFormGroup.get('contactInfo')?.hasError('required')" class="text-danger">
+          {{ 'FIELD_REQUIRED' | translate }}
+        </div>
+        <div *ngIf="addSupplierFormGroup.get('contactInfo')?.hasError('pattern')" class="text-danger">
+          {{ 'Enter Valid Contactinfo' | translate }}
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTE : Buttons -->
+    <div class="d-flex justify-content-center mt-3 gap-3">
+      <button type="submit" [disabled]="addSupplierFormGroup.invalid" class="btn btn-primary custom-button">
+        Add
+      </button>
+      <button type="reset" class="btn btn-light custom-button" (click)="resetForm()">
+        Reset
+      </button>
+    </div>
+  </form>
+</div>
+
+
+//Angular Modules
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+
+//Services
+import { SupplierService } from '@services/supplier.service';
+
+@Component({
+  selector: 'app-add-supplier',
+  templateUrl: './add-supplier.component.html',
+  styleUrls: ['./add-supplier.component.scss']
+})
+export class AddSupplierComponent implements OnInit {
+  //declarations
+  addSupplierFormGroup: FormGroup = new FormGroup({});
+  show: boolean = false;
+  formObject =
+    {
+      id: 0,
+      supplierName: '',
+      contactInfo: '',
+      country: '',
+      createdAt: new Date()
+    }
+
+
+  constructor(private formBuilder: FormBuilder, private supplierService: SupplierService, private router: Router) { }
+
+  ngOnInit(): void {
+    this.addSupplierFormGroup = this.formBuilder.group({
+      supplierName: ['', [Validators.required]],
+      contactInfo: ['', [Validators.required, Validators.maxLength(12),Validators.pattern('^\\+?\\d{10,15}$')]],
+      country: ['', [Validators.required]]
+    });
+  }
+  //If form valid then addApi calling
+  onSubmit() {
+    if (this.addSupplierFormGroup.valid) {
+      console.log(this.formObject);
+      this.supplierService.addSupplier(this.formObject).subscribe((resp) => {
+        console.log("Supplier Added: " + resp);
+        window.alert('Supplier added successful!!');
+        this.router.navigate(['/supplier']);
+      },
+        (err) => {
+          console.log("response: " + err.message);
+          window.alert('Unable to add supplier!!');
+
+        });
+    } else {
+      console.log('Form is not valid!');
+    }
+    this.clear();
+  }
+  //For clearing the form object
+  clear() {
+    this.formObject.supplierName = "";
+    this.formObject.contactInfo = "";
+    this.formObject.country = "";
+    this.show = true;
+  }
+  // for reseting the form
+  resetForm()
+  {
+    this.addSupplierFormGroup.reset();
+  }
+}
+
+
+
+
+    2list-supplier
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
+    <h2>Manage Suppliers</h2>
+    <button
+      id="supplierAdd"
+      type="button"
+      class="btn btn-primary"
+      (click)="onAdd()"
+      *ngIf="userRole === 'admin'"
+    >
+      Add Supplier
+    </button>
+  </div>
+
+  <div class="table-responsive" style="max-height: 500px; overflow-x: hidden;">
+    <table id="suppliertbl" class="table  table-bordered table-hover">
+      <thead class="table-light text-center">
+        <tr>
+          <th>Id</th>
+          <th>Supplier Name</th>
+          <th>Country</th>
+          <th>Contact Info</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let supplier of supplier">
+          <td>{{ supplier.id }}</td>
+          <td>{{ supplier.supplierName }}</td>
+          <td>{{ supplier.country }}</td>
+          <td>{{ supplier.contactInfo }}</td>
+          <td class="text-center">
+            <button class="btn btn-outline-primary btn-sm mr-3" (click)="onUpdate(supplier.id)"
+              *ngIf="userRole === 'admin'">
+              <i class="bi bi-pencil"></i> Edit
+            </button>
+            <button class="btn btn-outline-danger btn-sm" (click)="onDelete(supplier.id)"
+              *ngIf="userRole === 'admin'">
+              <i class="bi bi-trash"></i> Delete
+            </button>
+            <p [hidden]="userRole === 'admin'">NA</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+//Angular Modules
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+
+//Models
+import { Supplier } from '@models/supplier.model';
+
+//Services
+import { SupplierService } from '@services/supplier.service';
+
+@Component({
+  selector: 'app-list-suppier',
+  templateUrl: './list-suppier.component.html',
+  styleUrls: ['./list-suppier.component.scss']
+})
+export class ListSuppierComponent implements OnInit {
+  //declarations
+  isLoading: boolean = true;
+  userRole :string | null | undefined ;
+  supplier: Supplier[] = [];
+  constructor(private supplierService: SupplierService, private router: Router) { }
+
+  //TODO : Authguard add up
+  ngOnInit(): void {
+    setTimeout(_ => {
+      this.isLoading = false;
+    }, 2000);
+    this.userRole = localStorage.getItem('role');
+    this.getSupplierData();
+  }
+
+  //ApiCalling method
+  getSupplierData() {
+    this.supplierService.getSupplier().subscribe(
+      (supplier: Supplier[]) => {
+        this.supplier = supplier;
+        //Cross Verification or for Debugging use
+        console.log(supplier);
+      },
+      (error) => {
+        window.alert('Error Fetching Supplier Data');
+        console.error("Error is :", error);
+      }
+    );
+  }
+  //navigation to update supplier component
+  onUpdate(id: number) {
+    this.router.navigate(['supplier', 'update-supplier', id]);
+  }
+  //navigation to add supplier component
+  onAdd() {
+    this.router.navigate(['supplier', 'add-supplier']);
+  }
+  //Delete Suppliers functions
+  onDelete(id: number) {
+
+    if (confirm("Are you sure you want to delete this supplier?")) {
+      this.supplierService.deleteSupplier(id).subscribe(
+        (resp) => {
+          this.getSupplierData();
+        },
+        (err) => {
+          console.log(id);
+          console.log("resposnse: " + err.message);
+        });
+    }
+  }
+
+}
+
+    2update-supplier
+
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">Edit Supplier</h2>
+
+  <!-- NOTE : Supplier Id (Hidden) -->
+  <div class="mb-3" style="display: none;">
+    <label class="form-label">ID</label>
+    <input type="text" class="form-control" [(ngModel)]="supplierId" disabled />
+  </div>
+
+  <!-- NOTE : Update Supplier Form -->
+  <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()" class="w-50 mx-auto">
+
+    <!-- NOTE : Supplier Name -->
+    <div class="mb-3">
+      <label for="floatingInput" class="form-label">Supplier Name</label>
+      <input
+        type="text"
+        class="form-control"
+        id="floatingInput"
+        placeholder="Enter Supplier Name"
+        formControlName="supplierName"
+        [(ngModel)]="formObject.supplierName"
+      />
+      <!-- NOTE : Errors -->
+      <div *ngIf="supplierForm.get('supplierName')?.touched && supplierForm.get('supplierName')?.invalid">
+        <div *ngIf="supplierForm.get('supplierName')?.hasError('required')" class="text-danger">
+          Supplier Name is required.
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTE : Contact Name -->
+    <div class="mb-3">
+      <label for="floatingInput" class="form-label">Contact Info</label>
+      <input
+        type="text"
+        class="form-control"
+        id="floatingInput"
+        placeholder="1234567890"
+        formControlName="contactName"
+        [(ngModel)]="formObject.contactInfo"
+      />
+      <!-- NOTE : Errors -->
+      <div *ngIf="supplierForm.get('contactName')?.touched && supplierForm.get('contactName')?.invalid">
+        <div *ngIf="supplierForm.get('contactName')?.hasError('required')" class="text-danger">
+          Contact Name is required.
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTE : Country -->
+    <div class="mb-3">
+      <label for="floatingInput" class="form-label">Country</label>
+      <input
+        type="text"
+        class="form-control"
+        id="floatingInput"
+        placeholder="Ex: India, UK"
+        formControlName="country"
+        [(ngModel)]="formObject.country"
+      />
+      <!-- NOTE : Errors -->
+      <div *ngIf="supplierForm.get('country')?.touched && supplierForm.get('country')?.invalid">
+        <div *ngIf="supplierForm.get('country')?.hasError('required')" class="text-danger">
+          Country is required.
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTE : Buttons -->
+    <div class="d-flex justify-content-center mt-3 gap-3">
+      <button type="submit" [disabled]="supplierForm.invalid" class="btn btn-primary custom-button">
+        Update
+      </button>
+      <button type="button" (click)="resetForm()" class="btn btn-light custom-button">
+        Reset
+      </button>
+    </div>
+  </form>
+</div>
+
+
+
+
+
+//Angular Modules
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+
+//Models
+import { Supplier } from '@models/supplier.model';
+
+//Services
+import { SupplierService } from '@services/supplier.service';
+
+@Component({
+  selector: 'app-update-supplier',
+  templateUrl: './update-supplier.component.html',
+  styleUrls: ['./update-supplier.component.scss']
+})
+export class UpdateSupplierComponent implements OnInit {
+
+  //Declarations
+  supplierId!: number;
+  supplierForm!: FormGroup;
+  suppliers: Supplier | undefined;
+  formObject = {
+    id: 0,
+    supplierName: '',
+    contactInfo: '',
+    country: '',
+
+    updatedAt: new Date()
+  }
+  constructor(private supplierService:SupplierService,private router:Router,private formbuilder:FormBuilder,private route:ActivatedRoute) { }
+
+  ngOnInit(): void {
+    this.supplierForm = this.formbuilder.group({
+      supplierName: ['', Validators.required],
+      contactName: ['', Validators.required],
+      country: ['', Validators.required]
+    });
+    this.supplierId = this.route.snapshot.params['id'];
+
+    this.getSupplierDetails(this.supplierId);
+  }
+  //Supplier Details Get by ID
+  getSupplierDetails(id :number)
+  {
+      this.supplierService.getSupplierById(id).subscribe(
+        (suppliers:Supplier)=>{
+          console.log(suppliers);
+          this.suppliers = suppliers;
+          this.formObject.id = this.suppliers.id;
+          this.formObject.supplierName = this.suppliers.supplierName;
+          this.formObject.contactInfo = this.suppliers.contactInfo;
+          this.formObject.country = this.suppliers.country;
+        },
+        (error:any)=>{
+          console.log(error)
+        }
+      );
+  }
+  //After Updation Form Is valid Then Update Api calling
+  onSubmit()
+  {
+    if(this.supplierForm.valid)
+    {
+      this.supplierService.updateSupplier(this.formObject).subscribe(
+        (resp) => {
+          console.log("Response: ", resp);
+          window.alert('Supplier updated successfully!');
+          this.router.navigate(['/supplier']);
+        },
+        (error) => {
+          console.log("Error updating supplier:", error);
+          window.alert('Failed to update supplier.');
+        }
+      );
+    }
+    else {
+      console.log('Form is invalid!');
+    }
+  }
+  //For Reseting the Form
+  resetForm()
+  {
+    this.getSupplierDetails(this.supplierId);
+  }
+}
+
+    2supplier-info.component.html
+<app-page-layout>
+  <div class="container my-3">
+    <app-progress-bar *ngIf="isLoading"></app-progress-bar>
+    <router-outlet></router-outlet>
+  </div>
+</app-page-layout>
+
+    2supplier-info.component.ts
+//Angular Modules
+import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-supplier-info',
+  templateUrl: './supplier-info.component.html',
+  styleUrls: ['./supplier-info.component.scss']
+})
+export class SupplierInfoComponent implements OnInit {
+
+  //declarations
+  isLoading : boolean = true;
+  constructor() { }
+
+  ngOnInit(): void {
+    setTimeout(_ => {
+      this.isLoading = false;
+    }, 2000);
+  }
+
+}
+
+  1supplier-routing.module.ts
+//Angular Modules
+import { NgModule } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { Routes } from '@angular/router';
+
+// Components
+import { ListSuppierComponent } from './supplier-info/list-suppier/list-suppier.component';
+import { AddSupplierComponent } from './supplier-info/add-supplier/add-supplier.component';
+import { UpdateSupplierComponent } from './supplier-info/update-supplier/update-supplier.component';
+import { SupplierInfoComponent } from './supplier-info/supplier-info.component';
+
+const routes: Routes = [
+  {
+    path: '',
+    component: SupplierInfoComponent,
+    children: [
+      {
+        path       : '',
+        redirectTo : 'list-supplier',
+        pathMatch  : 'full',
+        
+      },
+      {
+        path: 'list-supplier',
+        component: ListSuppierComponent
+      }
+      ,
+      {
+        path: 'add-supplier',
+        component: AddSupplierComponent
+      },
+      {
+        path: 'update-supplier/:id',
+        component: UpdateSupplierComponent
+      }
+
+    ]
+  },
+];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
+})
+export class SupplierRoutingModule { }
+
+  1supplier.module.ts
+
+
+//Angular Modules
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+//Internal Modules
+import { SupplierRoutingModule } from './supplier-routing.module';
+import { SharedModule } from 'src/app/shared/shared.module';
+
+//Components
+import { ListSuppierComponent } from './supplier-info/list-suppier/list-suppier.component';
+import { AddSupplierComponent } from './supplier-info/add-supplier/add-supplier.component';
+import { UpdateSupplierComponent } from './supplier-info/update-supplier/update-supplier.component';
+import { SupplierInfoComponent } from './supplier-info/supplier-info.component';
+
+
+
+@NgModule({
+
+  imports: [
+    CommonModule,
+    SupplierRoutingModule,
+    SharedModule
+  ],
+  declarations: [
+    ListSuppierComponent,
+    AddSupplierComponent,
+    UpdateSupplierComponent,
+    SupplierInfoComponent
+  ]
+})
+export class SupplierModule { }
+
+
