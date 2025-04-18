@@ -97,13 +97,80 @@
 
 
 
+Configure Stock Movement Statuses
+
+User Story:
+As an user, I want to manage Stock Movement Statuses so that I can make Stock Movement Type to use the Statuses.
+
+Technical Considerations:
+
+API Endpoint:
+GET /api/stock/stockmovementstatuses
+POST /api/stock/savestockmovementstatus (Add/ Update stock movement status)
+Database Schema (StockMovementStatuses Table):
+MovementStatusID (PK), Name, Description, Version,  UpdatedAt
+Validation:
+Name should be unique
 
 
 
+2/04
+Internal project (PIM) : Accomodated my backend part changes in the new backend skeleton provided and the APIs are working fine for Product and Category entity.
+Cloned the Banner Magento project and creating new database in phpmyadmin.
+
+Completed the creation of new database in phpmyadmin for magento project.
+Internal project (PIM) : From master pulled changes(registration, login) and then created a feature branch and accomodated my frontend and backend in that(But there is a issue regarding version of angular).
+
+Did the setup of Magento project.
+Worked on internal project task of merging my code in the provided skeleton.
+
+Completed the internal task and raised an MR for the same.
+Was assigned the internal project task of this week, so was going through the user story.
+Raised and Internal IT ticket for Entry in localhost and got it done and then was working on the magento project setup.
 
 
+Had a call to setup the magento project and its done now.
+Worked on the internal project task ( Configure Cultures ) :
+-Created Model for the Cultures table, DbContext file (defined constraints, validations) and performed migration.
+-Created a Controller for cultures (2 endpoits: Get and Get by Id)
+-Service layer :Retrieves cultures from CultureInfo class.
+-Repository layer
+
+Today’s Summary 
+
+Worked on the internal project task ( Configure Cultures ) :
+-Utilized CultureInfo and transformed the data with RegionInfo(Converted CultureInfo objects to RegionInfo to fetch region-specific country name)
+-Added condition to handle duplicate data entry.(244 unique entry's are there)
+-I have pushed the changes
 
 
+Worked on the internal project task ( Configure Cultures ) :
+-Worked on the fronted part : Made a table component to list down all the fields of culture.
+-Raised an MR for the same (Made changes according to the comments provided, Resolved the conflicts)
+-Started the work on the next task : Replenishment Management(In that made the Model performed migration, created the repository layer).
+
+For the configure culture : Made changes regarding Migration of Cultures table to align with EFMigrationHistory table and some minor changes in backend.
+Worked on the internal project task ( Replenishment Management ) : In that created the controller(enpoints-GET, GET(id), POST) and service layer in backend for Replenishment Rules.
+
+Worked on the internal project task ( Replenishment Management ) : 
+-In backend (Fetched the stock quantity to compare with the MinThreshold & check out-of-stock ) and worked on sending notifications for the same.
+            -Worked on the frontend part (created a form and table component to add & list down the                              replenishment rules)
+
+Completed the internal project task ( Replenishment Management ) : 
+-Checked Stock Levels after each stock movement.
+-Auto-Replenishment: When stock is below threshold, it automatically create inbound stock using ReorderQuantity.
+-Was solving the merge conflicts from latest pull.
+
+Raised an MR for Replenishment Management after solving merge conflicts.
+-Added the dropdown for Supplier Name in place of SupplierId in form and table component.
+-Resolved the Comments provided in the MR.
+-Started to work on adding SKU textfield in place of ProductId field.
+
+
+Pushed the changes for Replacing ProductId with SKU textfield input in the replenishment form and table.
+Explored various Git concepts in detail.
+Started working on internal project task (Configure Stock Movement Statuses) :
+- Did the backend part of creating CRUD API's for stock movement status
 
 
 
