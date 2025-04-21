@@ -14,6 +14,185 @@
   ]
 }
 
+1)manage-stock-movement-status.component.html:
+
+<app-layout-header></app-layout-header>
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">{{ isEditMode ? 'Update' : 'Add' }} Stock Movement Status</h2>
+
+  <form (ngSubmit)="onSubmit()" #statusForm="ngForm" class="w-50 mx-auto">
+    <div *ngIf="errorMessage" class="text-danger">
+      {{ errorMessage }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Status Name</label>
+      <input
+        required
+        class="form-control"
+        type="text"
+        name="name"
+        [(ngModel)]="stockMovementStatus.name"
+        placeholder="Enter Status Name"
+      />
+      <div *ngIf="statusForm.submitted && !stockMovementStatus.name" class="text-danger">
+        Status Name is required.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+      <input
+        required
+        class="form-control"
+        type="text"
+        name="description"
+        [(ngModel)]="stockMovementStatus.description"
+        placeholder="Enter Description"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Version</label>
+      <input
+        class="form-control"
+        type="number"
+        name="version"
+        [(ngModel)]="stockMovementStatus.version"
+        placeholder="Enter Version"
+      />
+    </div>
+
+    <div class="d-flex justify-content-center mt-3 gap-3">
+      <button type="submit" [disabled]="statusForm.invalid" class="btn btn-primary custom-button">
+        {{ isEditMode ? 'Update' : 'Add' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+
+2)manage-stock-movement-status.component.ts:
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { StockMovementStatus } from '@models/stock-movement-status';
+import { StockMovementStatusService } from '@services/stock-movement-status.service';
+
+@Component({
+  selector: 'app-manage-stock-movement-status',
+  templateUrl: './manage-stock-movement-status.component.html',
+  styleUrls: ['./manage-stock-movement-status.component.scss']
+})
+export class ManageStockMovementStatusComponent implements OnInit {
+
+  public stockMovementStatus: StockMovementStatus = {
+    id: 0,
+    name: '',
+    description: '',
+    version: 0,
+    updatedAt: new Date()
+  };
+
+  public isEditMode: boolean = false;
+  public errorMessage: string = '';
+
+  constructor(
+    private stockMovementStatusService: StockMovementStatusService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {}
+
+  public ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.isEditMode = true;
+      this.stockMovementStatusService.getStockMovementStatusById(+id).subscribe({
+        next: (data: StockMovementStatus) => {
+          this.stockMovementStatus = data;
+        },
+        error: (error) => {
+          console.error('Error fetching stock movement status:', error);
+          this.errorMessage = 'Failed to fetch status data.';
+        }
+      });
+    }
+  }
+
+  public onSubmit(): void {
+    this.errorMessage = '';
+
+    if (!this.stockMovementStatus.name) {
+      this.errorMessage = 'Status Name is required.';
+      return;
+    }
+
+    const request$ = this.isEditMode
+      ? this.stockMovementStatusService.updateStockMovementStatus(this.stockMovementStatus)
+      : this.stockMovementStatusService.addStockMovementStatus(this.stockMovementStatus);
+
+    request$.subscribe({
+      next: () => {
+        alert(`Stock Movement Status ${this.isEditMode ? 'updated' : 'added'} successfully!`);
+        this.router.navigate(['/stock/stockMovementStatuses']);
+      },
+      error: (err) => {
+        console.error('Error response:', err);
+        if (err.status === 409) {
+          this.errorMessage = 'A stock movement status with the same name already exists.';
+        } else {
+          this.errorMessage = 'An error occurred: ' + err.message;
+        }
+      }
+    });
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  public onSubmit(): void {
+    this.errorMessage = '';
+
+    if (!this.stockMovementStatus.name) {
+      this.errorMessage = 'Status Name is required.';
+      return;
+    }
+
+    const request$ = this.isEditMode
+      ? this.stockMovementStatusService.updateStockMovementStatus(this.stockMovementStatus)
+      : this.stockMovementStatusService.addStockMovementStatus(this.stockMovementStatus);
+
+    request$.subscribe({
+      next: () => {
+        alert(`Stock Movement Status ${this.isEditMode ? 'updated' : 'added'} successfully!`);
+        this.router.navigate(['/stock/stockMovementStatuses']);
+      },
+      error: (err) => {
+        console.error('Error response:', err);
+        if (err.status === 409) {
+          this.errorMessage = 'A stock movement status with the same name already exists.';
+        } else {
+          this.errorMessage = 'An error occurred: ' + err.message;
+        }
+      }
+    });
+  }
+}
 
 
 1)IStockMOvementStatusService.cs:
