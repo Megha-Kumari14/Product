@@ -13,3 +13,797 @@
     "src/**/*.d.ts"
   ]
 }
+
+
+
+
+using Pim.Application.Models;
+using Pim.Core.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Pim.Application.Interfaces
+{
+    public interface IStockMovementStatusService
+    {
+        Task<IEnumerable<StockMovementStatusDto>> GetAsync();
+        Task<StockMovementStatusDto> GetByIdAsync(int id);
+        Task<StockMovementStatusDto> AddAsync(StockMovementStatusDto dto);
+        Task<StockMovementStatusDto> UpdateAsync(StockMovementStatusDto dto);
+        Task<bool> DeleteAsync(int id);
+    }
+}
+
+using System;
+using System.ComponentModel.DataAnnotations;
+using Pim.Core.Enums;
+
+namespace Pim.Application.Models
+{
+    public class StockMovementDto
+    {
+        [Required]
+        public int ProductId { get; set; }
+
+        [Required]
+        public StockMovementType StockMovementType { get; set; }
+
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than 0.")]
+        public int Quantity { get; set; }
+
+        public string? SourceLocation { get; set; }
+        public string? DestinationLocation { get; set; }
+    }
+}
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Pim.Application.Interfaces;
+using Pim.Application.Models;
+using Pim.Core.Entities;
+using Pim.Core.Repositories;
+
+namespace Pim.Application.Services
+{
+    public class StockMovementStatusService : IStockMovementStatusService
+    {
+        private readonly IStockMovementStatusRepository _repository;
+
+        public StockMovementStatusService(IStockMovementStatusRepository repository)
+        {
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        }
+
+        public async Task<IEnumerable<StockMovementStatusDto>> GetAsync()
+        {
+            var statuses = await _repository.GetAsync();
+            var statusDtos = statuses.Select(status => new StockMovementStatusDto
+            {
+                Id = status.Id,
+                Name = status.Name,
+                Description = status.Description,
+                Version = status.Version,
+                UpdatedAt = status.UpdatedAt
+            });
+
+            return statusDtos;
+        }
+
+        public async Task<StockMovementStatusDto> GetByIdAsync(int id)
+        {
+            var status = await _repository.GetByIdAsync(id);
+            if (status is null) return null;
+
+            return new StockMovementStatusDto
+            {
+                Id = status.Id,
+                Name = status.Name,
+                Description = status.Description,
+                Version = status.Version,
+                UpdatedAt = status.UpdatedAt
+            };
+        }
+
+        public async Task<StockMovementStatusDto> AddAsync(StockMovementStatusDto statusDto)
+        {
+            var status = new StockMovementStatus
+            {
+                Name = statusDto.Name,
+                Description = statusDto.Description,
+                Version = statusDto.Version,
+                UpdatedAt = statusDto.UpdatedAt
+            };
+
+            var addedStatus = await _repository.AddAsync(status);
+
+            statusDto.Id = addedStatus.Id;
+            return statusDto;
+
+            // return new StockMovementStatusDto
+            // {
+            //     Id = addedStatus.Id,
+            //     Name = addedStatus.Name,
+            //     Description = addedStatus.Description,
+            //     Version = addedStatus.Version,
+            //     UpdatedAt = addedStatus.UpdatedAt
+            // };
+        }
+
+        public async Task<StockMovementStatusDto> UpdateAsync(StockMovementStatusDto statusDto)
+        {
+            var existingStatus = await _repository.GetByIdAsync(statusDto.Id);
+            if (existingStatus is null)
+            {
+                throw new InvalidOperationException("Stock Movement Status not found.");
+            }
+
+            existingStatus.Name = statusDto.Name;
+            existingStatus.Description = statusDto.Description;
+            existingStatus.Version = statusDto.Version;
+            existingStatus.UpdatedAt = statusDto.UpdatedAt;
+
+            var updatedStatus = await _repository.UpdateAsync(existingStatus);
+
+            statusDto.Name = updatedStatus.Name;
+            statusDto.Description = updatedStatus.Description;
+            statusDto.Version = updatedStatus.Version;
+            statusDto.UpdatedAt = updatedStatus.UpdatedAt;
+
+            return statusDto;
+
+            // return new StockMovementStatusDto
+            // {
+            //     Id = updatedStatus.Id,
+            //     Name = updatedStatus.Name,
+            //     Description = updatedStatus.Description,
+            //     Version = updatedStatus.Version,
+            //     UpdatedAt = updatedStatus.UpdatedAt
+            // };
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var status = await _repository.GetByIdAsync(id);
+            if (status is null)
+            {
+                return false;
+                // throw new InvalidOperationException("Stock Movement Status not found.");
+            }
+
+            await _repository.DeleteAsync(id);
+            return true;
+            
+
+            // var statusDto = new StockMovementStatusDto
+            // {
+            //     Id = status.Id,
+            //     Name = status.Name,
+            //     Description = status.Description,
+            //     Version = status.Version,
+            //     UpdatedAt = status.UpdatedAt
+            // };
+
+            // return statusDto;
+
+            // return new StockMovementStatusDto
+            // {
+            //     Id = status.Id,
+            //     Name = status.Name,
+            //     Description = status.Description,
+            //     Version = status.Version,
+            //     UpdatedAt = status.UpdatedAt
+            // };
+        }
+    }
+}
+
+using System;
+using Pim.Core.Entities.Base;
+
+namespace Pim.Core.Entities
+{
+    public class StockMovementStatus : Entity
+    {
+        public StockMovementStatus()
+        {
+            UpdatedAt = DateTime.UtcNow;
+        }  
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int Version { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        
+        public static StockMovementStatus Create(int movementStatusId, string name, string description, int version, DateTime updatedAt )
+        {
+            var stockMovementStatus = new StockMovementStatus
+            {
+                Id = movementStatusId,
+                Name = name,
+                Description = description,
+                Version = version,
+                UpdatedAt = updatedAt
+
+            };
+            return stockMovementStatus;
+        }
+    }
+}
+
+using Pim.Core.Entities;
+using Pim.Core.Repositories.Base;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Pim.Core.Repositories
+{
+    public interface IStockMovementStatusRepository : IRepository<StockMovementStatus>
+    {
+        Task<IEnumerable<StockMovementStatus>> GetAsync();
+        Task<StockMovementStatus> GetByIdAsync(int id);
+        Task<StockMovementStatus> AddAsync(StockMovementStatus status);
+        Task<StockMovementStatus> UpdateAsync(StockMovementStatus status);
+        Task<StockMovementStatus> DeleteAsync(int id);
+    }
+}
+
+
+
+using Microsoft.EntityFrameworkCore;
+using Pim.Application.Exceptions;
+using Pim.Core.Entities;
+using Pim.Core.Repositories;
+using Pim.Infrastructure.Data;
+using Pim.Infrastructure.Repository.Base;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Pim.Infrastructure.Repository
+{
+    public class StockMovementStatusRepository : Repository<StockMovementStatus>, IStockMovementStatusRepository
+    {
+        public StockMovementStatusRepository(PIMContext dbContext) : base(dbContext) { }
+
+        public async Task<IEnumerable<StockMovementStatus>> GetAsync()
+        {
+            return await _dbContext.StockMovementStatus.ToListAsync();
+        }
+
+        public async Task<StockMovementStatus> GetByIdAsync(int id)
+        {
+            return await _dbContext.StockMovementStatus.FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<StockMovementStatus> AddAsync(StockMovementStatus status)
+        {
+            await _dbContext.StockMovementStatus.AddAsync(status);
+            await _dbContext.SaveChangesAsync();
+            return status;
+        }
+
+        public async Task<StockMovementStatus> UpdateAsync(StockMovementStatus status)
+        {
+            _dbContext.StockMovementStatus.Update(status);
+            await _dbContext.SaveChangesAsync();
+            return status;
+        }
+
+        public async Task<StockMovementStatus> DeleteAsync(int id)
+        {
+            var status = await _dbContext.StockMovementStatus.FirstOrDefaultAsync(x => x.Id == id);
+            if (status is null) throw new EntityNotFoundException();
+
+            _dbContext.StockMovementStatus.Remove(status);
+            await _dbContext.SaveChangesAsync();
+            return status;
+        }
+    }
+}
+
+
+
+
+
+
+using Microsoft.AspNetCore.Mvc;
+using Pim.Application.Exceptions;
+using Pim.Application.Interfaces;
+using Pim.Application.Models;
+
+namespace Pim.WebAPI.Controllers
+{
+    [ApiController]
+    [Route("api/stockMovementStatuses")]
+    public class StockMovementStatusController : ControllerBase
+    {
+        private readonly IStockMovementStatusService _service;
+
+        public StockMovementStatusController(IStockMovementStatusService service)
+        {
+            _service = service;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllAsync()
+        {
+            try
+            {
+                var statuses = await _service.GetAsync();
+                return Ok(statuses);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error retrieving stock movement statuses: " + ex.Message);
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetByIdAsync(int id)
+        {
+            try
+            {
+                var status = await _service.GetByIdAsync(id);
+                if (status is null) return NotFound();
+
+                return Ok(status);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error retrieving stock movement status: " + ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddAsync([FromBody] StockMovementStatusDto statusDto)
+        {
+            try
+            {
+                if (statusDto is null) return BadRequest("Invalid input");
+
+                var existingStatus = await _service.GetAsync();
+                if (existingStatus.Any(s => s.Name.Equals(statusDto.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return Conflict("A stock movement status with the same name already exists.");
+                }
+
+                var result = await _service.AddAsync(statusDto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error adding stock movement status: " + ex.Message);
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateAsync([FromBody] StockMovementStatusDto statusDto)
+        {
+            try
+            {
+                if (statusDto is null || statusDto.Id is 0)
+                    return BadRequest("Invalid input");
+
+                await _service.UpdateAsync(statusDto);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error updating stock movement status: " + ex.Message);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAsync(int id)
+        {
+            try
+            {
+                await _service.DeleteAsync(id);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error deleting stock movement status: " + ex.Message);
+            }
+        }
+    }
+}
+
+<app-layout-header></app-layout-header>
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Update Stock Movement Status</h2>
+  
+    <form (ngSubmit)="onSubmit()" #statusForm="ngForm" class="w-50 mx-auto">
+  
+      <div *ngIf="errorMessage" class="text-danger">
+        {{ errorMessage }}
+      </div>
+  
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input
+          required
+          class="form-control"
+          type="text"
+          name="name"
+          [(ngModel)]="stockMovementStatus.name"
+          placeholder="Enter Status Name"
+        />
+        <div *ngIf="statusForm.submitted && !stockMovementStatus.name" class="text-danger">
+          Name is required.
+        </div>
+      </div>
+  
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        <input
+          required
+          class="form-control"
+          type="text"
+          name="description"
+          [(ngModel)]="stockMovementStatus.description"
+          placeholder="Enter Description"
+        />
+        <div *ngIf="statusForm.submitted && !stockMovementStatus.description" class="text-danger">
+          Description is required.
+        </div>
+      </div>
+  
+      <div class="mb-3">
+        <label class="form-label">Version</label>
+        <input
+          type="number"
+          class="form-control"
+          name="version"
+          [(ngModel)]="stockMovementStatus.version"
+          [value]="stockMovementStatus.version"
+         
+        />
+      </div>
+  
+      <div class="d-flex justify-content-center mt-3 gap-3">
+        <button type="submit" [disabled]="statusForm.invalid" class="btn btn-primary custom-button">
+          Update
+        </button>
+      </div>
+    </form>
+  </div>
+
+
+
+
+
+
+
+
+
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { StockMovementStatus } from '@models/stock-movement-status';
+import { StockMovementStatusService } from '@services/stock-movement-status.service';
+
+@Component({
+  selector: 'app-update-stock-movement-status',
+  templateUrl: './update-stock-movement-status.component.html',
+  styleUrls: ['./update-stock-movement-status.component.scss']
+})
+export class UpdateStockMovementStatusComponent implements OnInit {
+
+  public stockMovementStatus: StockMovementStatus = {
+    id: 0,
+    name: '',
+    description: '',
+    version: 0,
+    updatedAt: new Date()
+  };
+
+  public errorMessage: string = '';
+
+  constructor(
+    private stockMovementStatusService: StockMovementStatusService,
+    private activatedRoute: ActivatedRoute,
+    private router: Router
+  ) {}
+
+  public ngOnInit(): void {
+    const id = Number(this.activatedRoute.snapshot.paramMap.get('id'));
+    this.stockMovementStatusService.getStockMovementStatusById(id).subscribe({
+      next: (data: StockMovementStatus) => {
+        this.stockMovementStatus = data;
+      },
+      error: (error) => {
+        console.error('Error fetching stock movement status:', error);
+      }
+    });
+  }
+
+  public onSubmit(): void {
+    this.errorMessage = '';
+
+    if (!this.stockMovementStatus.name) {
+      this.errorMessage = 'Status Name is required.';
+      return;
+    }
+
+    this.stockMovementStatusService.updateStockMovementStatus(this.stockMovementStatus).subscribe({
+      next: () => {
+        alert('Stock Movement Status updated successfully!');
+        this.router.navigate(['/stock/stockMovementStatuses']);
+      },
+      error: (err) => {
+        console.error("Error response:", err);
+        this.errorMessage = err.message;
+      }
+    });
+  }
+}
+
+
+
+
+
+
+
+<app-layout-header></app-layout-header>
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Add Stock Movement Status</h2>
+    
+    <form (ngSubmit)="onSubmit()" #statusForm="ngForm" class="w-50 mx-auto">
+      <div *ngIf="errorMessage" class="text-danger">
+          {{ errorMessage }}
+      </div>
+  
+      <div class="mb-3">
+        <label class="form-label">Status Name</label>
+        <input
+          required
+          #statusName="ngModel"
+          class="form-control"
+          type="text"
+          name="statusName"
+          [(ngModel)]="stockMovementStatus.name"
+          placeholder="Enter Status Name"
+        />
+      </div>
+    
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        <input
+          required
+          class="form-control"
+          type="text"
+          name="description"
+          [(ngModel)]="stockMovementStatus.description"
+          placeholder="Enter Description"
+        />
+      </div>
+  
+      <div class="mb-3">
+        <label class="form-label">Version</label>
+        <input
+          required
+          class="form-control"
+          type="text"
+          name="version"
+          [(ngModel)]="stockMovementStatus.version"
+          placeholder="Enter Version"
+        />
+      </div>
+    
+      <div class="d-flex justify-content-center mt-3 gap-3">
+        <button type="submit" [disabled]="statusForm.invalid" class="btn btn-primary custom-button">
+          Add
+        </button>
+      </div>
+    </form>
+  </div>
+
+
+
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { StockMovementStatus } from '@models/stock-movement-status';
+import { StockMovementStatusService } from '@services/stock-movement-status.service';
+
+@Component({
+  selector: 'app-add-stock-movement-status',
+  templateUrl: './add-stock-movement-status.component.html',
+  styleUrls: ['./add-stock-movement-status.component.scss']
+})
+export class AddStockMovementStatusComponent implements OnInit {
+
+  public stockMovementStatus: StockMovementStatus = {
+    id: 0,
+    name: '',
+    description: '',
+    version: 0,
+    updatedAt: new Date()
+  };
+
+  public errorMessage: string = '';
+
+  constructor(
+    private stockMovementStatusService: StockMovementStatusService,
+    private router: Router
+  ) {}
+
+  public ngOnInit(): void {}
+
+  public onSubmit(): void {
+    this.errorMessage = '';
+
+    if (!this.stockMovementStatus.name) {
+      this.errorMessage = 'Status Name is required.';
+      return;
+    }
+
+    this.stockMovementStatusService.addStockMovementStatus(this.stockMovementStatus).subscribe({
+      next: () => {
+        alert('Stock Movement Status added successfully!');
+        this.router.navigate(['/stock/stockMovementStatuses']);
+      },
+      error: (err) => {
+        console.error("Error response:", err);
+        if (err.status === 409) {
+          this.errorMessage = 'A stock movement status with the same name already exists.';
+        } else {
+          this.errorMessage = 'An error occurred while adding the stock movement status: ' + err.message;
+        }
+      }
+    });
+  }
+}
+
+
+
+<app-layout-header></app-layout-header>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
+      <h2>Stock Movement Statuses</h2>
+      <div class="d-flex justify-content-end align-items-center flex-wrap">
+        <button class="btn btn-primary me-3 mb-2" (click)="onAdd()">Add Stock Movement Status</button>
+      </div>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Status Name</th>
+            <th>Description</th>
+            <th>Version</th>
+            <th>UpdatedAt</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let status of stockMovementStatuses">
+            <td>{{ status.id }}</td>
+            <td>{{ status.name }}</td>
+            <td>{{ status.description }}</td>
+            <td>{{ status.version }}</td>
+            <td>{{ status.updatedAt | date }}</td>
+            <td>
+              <button class="btn btn-outline-primary btn-sm" (click)="onEdit(status.id)">Edit</button>
+              <button class="btn btn-outline-danger btn-sm" (click)="onDelete(status.id)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+    
+
+
+    import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { StockMovementStatus } from '@models/stock-movement-status';
+import { StockMovementStatusService } from '@services/stock-movement-status.service';
+
+@Component({
+  selector: 'app-list-stock-movement-status',
+  templateUrl: './list-stock-movement-status.component.html',
+  styleUrls: ['./list-stock-movement-status.component.scss']
+})
+export class ListStockMovementStatusComponent implements OnInit {
+
+  public stockMovementStatuses: StockMovementStatus[] = [];
+
+  constructor(
+    private stockMovementStatusService: StockMovementStatusService,
+    private router: Router
+  ) {}
+
+  public ngOnInit(): void {
+    this.stockMovementStatusService.getStockMovementStatuses().subscribe({
+      next: (data: StockMovementStatus[]) => {
+        this.stockMovementStatuses = data;
+      },
+      error: (error) => {
+        console.error('Error fetching stock movement statuses:', error);
+      }
+    });
+  }
+
+  public onEdit(id: number): void {
+    this.router.navigate([`/stock/stockMovementStatuses/edit/${id}`]);
+  }
+
+  public onDelete(id: number): void {
+    if (confirm('Are you sure you want to delete this stock movement status?')) {
+      this.stockMovementStatusService.deleteStockMovementStatus(id).subscribe({
+        next: () => {
+          alert('Stock Movement Status deleted successfully!');
+          this.ngOnInit();  
+        },
+        error: (err) => {
+          console.error('Error deleting stock movement status:', err);
+        }
+      });
+    }
+  }
+  public onAdd(): void {
+    this.router.navigate(['/stock/stockMovementStatuses/add']);
+  }
+}
+
+
+  export interface StockMovementStatus {
+    id: number;
+    name: string;
+    description: string;
+    version: number;
+    updatedAt: Date;
+  }
+
+
+
+
+
+
+
+
+
+
+
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { StockMovementStatus } from '@models/stock-movement-status';
+import { environment } from '@env/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class StockMovementStatusService {
+
+  private apiUrl = `${environment.apiBaseUrl}/stockMovementStatuses`; 
+
+  constructor(private http: HttpClient) { }
+
+  public getStockMovementStatuses(): Observable<StockMovementStatus[]> {
+    return this.http.get<StockMovementStatus[]>(`${this.apiUrl}`);
+  }
+
+  public getStockMovementStatusById(id: number): Observable<StockMovementStatus> {
+    return this.http.get<StockMovementStatus>(`${this.apiUrl}/${id}`);
+  }
+
+  public addStockMovementStatus(status: StockMovementStatus): Observable<StockMovementStatus> {
+    return this.http.post<StockMovementStatus>(`${this.apiUrl}`, status);
+  }
+
+  public updateStockMovementStatus(status: StockMovementStatus): Observable<StockMovementStatus> {
+    status.updatedAt = new Date();
+    return this.http.put<StockMovementStatus>(`${this.apiUrl}`, status);
+  }
+
+  public deleteStockMovementStatus(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+}
+
+  
