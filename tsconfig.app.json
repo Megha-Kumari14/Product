@@ -16,6 +16,7 @@
 
 
 
+1)IStockMOvementStatusService.cs:
 
 using Pim.Application.Models;
 using Pim.Core.Entities;
@@ -33,6 +34,8 @@ namespace Pim.Application.Interfaces
         Task<bool> DeleteAsync(int id);
     }
 }
+
+2) StockMOvementStatusDto.cs:
 
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -57,6 +60,7 @@ namespace Pim.Application.Models
     }
 }
 
+3) StockMOvementStatusService.cs:
 
 using System;
 using System.Collections.Generic;
@@ -201,6 +205,7 @@ namespace Pim.Application.Services
     }
 }
 
+4)StockMovementStatus.cs
 using System;
 using Pim.Core.Entities.Base;
 
@@ -233,6 +238,8 @@ namespace Pim.Core.Entities
     }
 }
 
+5)IStockMovementStatusRepository.cs:
+
 using Pim.Core.Entities;
 using Pim.Core.Repositories.Base;
 using System.Collections.Generic;
@@ -250,7 +257,7 @@ namespace Pim.Core.Repositories
     }
 }
 
-
+6)StockMovementStatusRepository.cs:
 
 using Microsoft.EntityFrameworkCore;
 using Pim.Application.Exceptions;
@@ -303,11 +310,7 @@ namespace Pim.Infrastructure.Repository
     }
 }
 
-
-
-
-
-
+7) StockMovementStatusController.cs:
 using Microsoft.AspNetCore.Mvc;
 using Pim.Application.Exceptions;
 using Pim.Application.Interfaces;
@@ -411,6 +414,8 @@ namespace Pim.WebAPI.Controllers
     }
 }
 
+1)update-stock-movement-status.component.html:
+
 <app-layout-header></app-layout-header>
 <div class="container mt-4">
     <h2 class="mb-4 text-center">Update Stock Movement Status</h2>
@@ -471,13 +476,7 @@ namespace Pim.WebAPI.Controllers
     </form>
   </div>
 
-
-
-
-
-
-
-
+2)update-stock-movement-status.component.ts:
 
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -540,11 +539,7 @@ export class UpdateStockMovementStatusComponent implements OnInit {
   }
 }
 
-
-
-
-
-
+3)add-stock-movement-status.component.html:
 
 <app-layout-header></app-layout-header>
 <div class="container mt-4">
@@ -601,6 +596,7 @@ export class UpdateStockMovementStatusComponent implements OnInit {
   </div>
 
 
+4)add-stock-movement-status.component.ts:
 
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
@@ -656,7 +652,7 @@ export class AddStockMovementStatusComponent implements OnInit {
   }
 }
 
-
+5)list-stock-movement-status.component.html:
 
 <app-layout-header></app-layout-header>
 <div class="container mt-4">
@@ -697,8 +693,8 @@ export class AddStockMovementStatusComponent implements OnInit {
   </div>
     
 
-
-    import { Component, OnInit } from '@angular/core';
+6)list-stock-movement-status.component.ts:
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { StockMovementStatus } from '@models/stock-movement-status';
 import { StockMovementStatusService } from '@services/stock-movement-status.service';
@@ -750,6 +746,7 @@ export class ListStockMovementStatusComponent implements OnInit {
   }
 }
 
+7)stock-movement-status.model.ts:
 
   export interface StockMovementStatus {
     id: number;
