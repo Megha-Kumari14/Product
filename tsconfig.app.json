@@ -149,50 +149,115 @@ export class ManageStockMovementStatusComponent implements OnInit {
 
 
 
+'''
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Pim.Application.Interfaces;
+using Pim.Application.Models;
+using Pim.Core.Entities;
+using Pim.Core.Repositories;
 
+namespace Pim.Application.Services
+{
+    public class StockMovementStatusService : IStockMovementStatusService
+    {
+        private readonly IStockMovementStatusRepository _repository;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  public onSubmit(): void {
-    this.errorMessage = '';
-
-    if (!this.stockMovementStatus.name) {
-      this.errorMessage = 'Status Name is required.';
-      return;
-    }
-
-    const request$ = this.isEditMode
-      ? this.stockMovementStatusService.updateStockMovementStatus(this.stockMovementStatus)
-      : this.stockMovementStatusService.addStockMovementStatus(this.stockMovementStatus);
-
-    request$.subscribe({
-      next: () => {
-        alert(`Stock Movement Status ${this.isEditMode ? 'updated' : 'added'} successfully!`);
-        this.router.navigate(['/stock/stockMovementStatuses']);
-      },
-      error: (err) => {
-        console.error('Error response:', err);
-        if (err.status === 409) {
-          this.errorMessage = 'A stock movement status with the same name already exists.';
-        } else {
-          this.errorMessage = 'An error occurred: ' + err.message;
+        public StockMovementStatusService(IStockMovementStatusRepository repository)
+        {
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
-      }
-    });
-  }
+
+        public async Task<IEnumerable<StockMovementStatusDto>> GetAsync()
+        {
+            var statuses = await _repository.GetAsync();
+            return statuses.Select(s => new StockMovementStatusDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Description = s.Description,
+                Version = s.Version,
+                UpdatedAt = s.UpdatedAt
+            });
+        }
+
+        public async Task<StockMovementStatusDto> GetByIdAsync(int id)
+        {
+            var s = await _repository.GetByIdAsync(id);
+            return s == null ? null : new StockMovementStatusDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Description = s.Description,
+                Version = s.Version,
+                UpdatedAt = s.UpdatedAt
+            };
+        }
+
+        public async Task<StockMovementStatusDto> AddAsync(StockMovementStatusDto dto)
+        {
+            var added = await _repository.AddAsync(new StockMovementStatus
+            {
+                Name = dto.Name,
+                Description = dto.Description,
+                Version = dto.Version,
+                UpdatedAt = dto.UpdatedAt
+            });
+
+            dto.Id = added.Id;
+            return dto;
+        }
+
+        public async Task<StockMovementStatusDto> UpdateAsync(StockMovementStatusDto dto)
+        {
+            var existing = await _repository.GetByIdAsync(dto.Id);
+            if (existing == null)
+                throw new InvalidOperationException("Stock Movement Status not found.");
+
+            existing.Name = dto.Name;
+            existing.Description = dto.Description;
+            existing.Version = dto.Version;
+            existing.UpdatedAt = dto.UpdatedAt;
+
+            await _repository.UpdateAsync(existing);
+            return dto;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var existing = await _repository.GetByIdAsync(id);
+            if (existing == null)
+                return false;
+
+            await _repository.DeleteAsync(id);
+            return true;
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 1)IStockMOvementStatusService.cs:
