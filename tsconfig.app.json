@@ -149,6 +149,19 @@ export class ManageStockMovementStatusComponent implements OnInit {
 
 
 
+
+
+
+3){
+  path: 'stock/stockMovementStatuses/add',
+  component: ManageStockMovementStatusComponent
+},
+{
+  path: 'stock/stockMovementStatuses/edit/:id',
+  component: ManageStockMovementStatusComponent
+}
+
+
 '''
 using System;
 using System.Collections.Generic;
