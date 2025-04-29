@@ -13,3 +13,307 @@
     "src/**/*.d.ts"
   ]
 }
+
+
+
+
+
+
+
+
+
+
+
+introduction to magento:Overview of Magento architecture and versions.                  
+Understanding Magento's role in e-commerce.
+
+PHP, MySQL & JavaScript All-in-One for Dummies
+https://pmcretail.percipio.com/books/d7c0b175-9dd6-4b46-bbe4-7dae7343953a
+
+CS
+https://developer.adobe.com/commerce/php/coding-standards/php/
+https://developer.adobe.com/commerce/php/coding-standards/js/
+https://developer.adobe.com/commerce/php/coding-standards/less/
+https://developer.adobe.com/commerce/php/coding-standards/html-style-guide/
+-----------------
+setting up development environment:Installing Magento locally using Docker or LAMP, WAMP.
+Configuring IDE (VSCode or phpstrome) for Magento 2 development.
+Configuring development environment for efficient development.
+Exploring basic configurations and file structure. 
+
+Introduction to the Basic LEMP Stack (For package setup)
+https://pmcretail.percipio.com/videos/fc684d6a-0a68-11e7-89ad-0242c0a80b08
+
+On-premises installation overview (For Magento 2 Setup )
+https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/overview
+
+Basic understanding of Nginx, MySQL, Command Prompt, PHP, .htaccess, File permissions
+
+Composer 
+Nginx orApache
+PHP and it's required extensions 
+MySQL or MariaDB
+ElasticSearch
+xDebug
+Detailed requirements : https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements
+
+----------------------
+Magento admin basics:
+Admin Workspace:https://experienceleague.adobe.com/en/docs/commerce-admin/start/admin/admin
+
+
+-------------------------
+Multi-store and multi-website setup:
+Configuring and managing multiple stores and websites within a single Magento instance.
+Implementing shared and separate catalogs, customer bases, and pricing structures.
+
+Multiple websites or stores
+https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-overview
+
+
+----------------------------
+working with magento CLI:
+
+Common CLI commands and their usage.
+Command-line tool
+https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/cli/config-cli
+---------------------------------
+Magento theming Basics:
+Creating custom themes and child themes.
+Introduction to Magento layout XML and templates.
+
+---------------------
+advanced frontend development:
+
+Utilizing RequireJS, Knockout.js, and LESS in Magento frontend.
+Implementing advanced frontend features and optimizations.
+
+PHP, HTML, CSS, LESS,  JavaScript, XML
+
+RequireJS
+https://pmcretail.percipio.com/courses/93108822-14c0-11e7-92d9-0242c0a80b07
+
+Knockout.js
+https://pmcretail.percipio.com/videos/0d813746-a91c-11e7-b050-7a420a93a8e4
+
+Frontend JavaScript
+https://developer.adobe.com/commerce/frontend-core/javascript/
+
+LESS
+https://pmcretail.percipio.com/videos/65f235a2-2c7c-497b-bdcb-7a26520af0b3
+https://pmcretail.percipio.com/courses/9326f659-14c0-11e7-92d9-0242c0a80b07
+
+Page Builder
+https://developer.adobe.com/commerce/frontend-core/page-builder/
+
+
+
+
+module development :Module Structure and Best Practices
+Creating Custom Modules and Configuration
+Dependency Injection and Service Contracts
+
+database architecture:
+Understanding Magento 2 Database Schema
+Working with EAV (Entity-Attribute-Value) Model
+Creating and Managing Custom Tables and Models
+
+api development:
+Overview of Magento 2 APIs (REST and GraphQL)
+Creating Custom APIs and Endpoints
+Integrating External APIs with Magento 2
+
+event/observer system:
+Understanding Magento’s Event System
+Creating and Configuring Observers
+Using Plugins to Extend Core Functionality
+
+security best practises:
+Customizing Admin Forms and Grids
+Extending Admin Functionality with Custom UI Components
+Creating Admin Menus and Actions
+
+performnace optimization:
+
+Caching Strategies and Techniques
+Database Optimization and Indexing
+Profiling and Debugging Performance Bottlenecks
+
+Security Best Practices:
+Implementing Security Measures and Best Practices
+Managing User Roles and Permissions
+Protecting Against Common Vulnerabilities
+
+
+Project-Based Learning:
+Building a Custom Magento 2 Module
+Developing a Full-featured API Integration
+Optimizing and Securing a Magento 2 Deployment
+Participating in Real-world Magento 2 Development Projects
+
+Deployment and Maintenance
+
+:
+Magento 2 Deployment Best Practices
+Managing Updates and Upgrades
+Handling Common Issues and Troubleshooting
+
+Database:MySQL, MariaDB, Percona
+Programming language:PHP, JS, HTML, LESS CSS
+Integrated development environment (IDE):Eclipse, PHPStorm
+Web server:Nginx or Apache
+Caching services:Redis, Varnish
+Search services:Elasticsearch
+Message queue services:RabbitMQ
+
+
+README Documentation: The repository currently lacks a README.md. Consider adding documentation covering project setup, build instructions, environment configuration details, and guidelines to aid current and future developers.
+Environment Variables & Secrets: Sensitive information like API keys or secrets appear to be committed in environment files. These should be added to .gitignore, and a template file (e.g., .env.example) should be committed instead to prevent accidental exposure.
+TypeScript Typing (any): There's significant use of the 'any' type throughout the codebase. To improve type safety and leverage TypeScript's benefits, it's recommended to replace 'any' with specific types where possible. For cases where the type is truly unknown until runtime checks, using unknown is preferable to 'any'.
+TypeScript Path Aliases: The tsconfig.json defines path aliases (like @blocks, @shared, etc.), but imports are still using long relative paths (e.g., src/app/shared/components/blocks/my-block). Consistently using the configured aliases (import { MyBlock } from '@blocks/my-block';) significantly improves import readability and maintainability, especially during refactoring.
+Unused Code: Several unused variables (and potentially imports or functions) were noted. Regularly removing dead code improves readability and reduces clutter. Linters can often be configured to help identify this.
+Local Storage Abstraction: local Storage is accessed directly in multiple places. Consider creating a shared 'Storage Service' to abstract these interactions. This service could manage getter/setters, potentially handle default values, and would make it much easier to switch to a different storage mechanism (like Session Storage, Indexed DB, or cookies) in the future if needed.
+setTimeout Usage: The use of setTimeout() was observed in several locations. While sometimes necessary, it can often be a less robust solution for handling asynchronous operations or timing issues. Please review these instances; often, Promises (async/await) will provide better control flow and predictability.
+API Response Handling Consistency: The way API responses are handled appears inconsistent. Some places define types for the expected response, while others don't. Consistently typing API responses enhances predictability and helps catch potential errors early.
+Deprecated subscribe() Usage: In some areas handling API responses (likely using RxJS), deprecated signatures of the .subscribe() method might be in use. For long-term support and compatibility, it's recommended to refactor these to use the currently supported signature (e.g., passing an observer object: { next: ..., error: ..., complete: ... }).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Magento Project Planning								
+Phase	Activity	Key Sub-Activities	Est. Man Days 	Start Date	End Date	Pre-requisites Skills	Required Tools 	Helpful links to study
+Foundations of Magento Development	Introduction to Magento	"Overview of Magento architecture and versions.
+Understanding Magento's role in e-commerce."	4					"PHP, MySQL & JavaScript All-in-One for Dummies
+https://pmcretail.percipio.com/books/d7c0b175-9dd6-4b46-bbe4-7dae7343953a
+
+CS
+https://developer.adobe.com/commerce/php/coding-standards/php/
+https://developer.adobe.com/commerce/php/coding-standards/js/
+https://developer.adobe.com/commerce/php/coding-standards/less/
+https://developer.adobe.com/commerce/php/coding-standards/html-style-guide/"
+	Setting Up Development Environment	"Installing Magento locally using Docker or LAMP, WAMP.
+Configuring IDE (VSCode or phpstrome) for Magento 2 development.
+Configuring development environment for efficient development.
+Exploring basic configurations and file structure."				Basic understanding of Nginx, MySQL, Command Prompt, PHP, .htaccess, File permissions	"Composer 
+Nginx orApache
+PHP and it's required extensions 
+MySQL or MariaDB
+ElasticSearch
+xDebug
+Detailed requirements : https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements"	"Introduction to the Basic LEMP Stack (For package setup)
+https://pmcretail.percipio.com/videos/fc684d6a-0a68-11e7-89ad-0242c0a80b08
+
+On-premises installation overview (For Magento 2 Setup )
+https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/overview"
+	Magento Admin Basics	Understanding magento 2 Admin	1					"Admin Workspace
+https://experienceleague.adobe.com/en/docs/commerce-admin/start/admin/admin"
+	Multi-store and Multi-website Setup	"Configuring and managing multiple stores and websites within a single Magento instance.
+Implementing shared and separate catalogs, customer bases, and pricing structures."	1					"Multiple websites or stores
+https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-overview"
+	Working with Magento CLI	Common CLI commands and their usage.					Access to Command prompt	"Command-line tool
+https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/cli/config-cli"
+Specialized Topics for Frontend Development	Magento Theming Basics	"Creating custom themes and child themes.
+Introduction to Magento layout XML and templates."	3					
+	Advanced Frontend Development	"Utilizing RequireJS, Knockout.js, and LESS in Magento frontend.
+Implementing advanced frontend features and optimizations."	4			PHP, HTML, CSS, LESS,  JavaScript, XML		"RequireJS
+https://pmcretail.percipio.com/courses/93108822-14c0-11e7-92d9-0242c0a80b07
+
+Knockout.js
+https://pmcretail.percipio.com/videos/0d813746-a91c-11e7-b050-7a420a93a8e4
+
+Frontend JavaScript
+https://developer.adobe.com/commerce/frontend-core/javascript/
+
+LESS
+https://pmcretail.percipio.com/videos/65f235a2-2c7c-497b-bdcb-7a26520af0b3
+https://pmcretail.percipio.com/courses/9326f659-14c0-11e7-92d9-0242c0a80b07
+
+Page Builder
+https://developer.adobe.com/commerce/frontend-core/page-builder/"
+Specialized Topics for Backend Development	Module Development	"Module Structure and Best Practices
+Creating Custom Modules and Configuration
+Dependency Injection and Service Contracts"	3					
+	Database Architecture	"Understanding Magento 2 Database Schema
+Working with EAV (Entity-Attribute-Value) Model
+Creating and Managing Custom Tables and Models"	1					
+	API Development	"Overview of Magento 2 APIs (REST and GraphQL)
+Creating Custom APIs and Endpoints
+Integrating External APIs with Magento 2"	2					
+	Event/Observer System	"Understanding Magento’s Event System
+Creating and Configuring Observers
+Using Plugins to Extend Core Functionality"	1					
+	"Admin UI and Grid Customization
+"	"Customizing Admin Forms and Grids
+Extending Admin Functionality with Custom UI Components
+Creating Admin Menus and Actions"	2					
+	Performance Optimization	"Caching Strategies and Techniques
+Database Optimization and Indexing
+Profiling and Debugging Performance Bottlenecks"	2					
+	Security Best Practices	"Implementing Security Measures and Best Practices
+Managing User Roles and Permissions
+Protecting Against Common Vulnerabilities"	2					
+Practical Applications and Projects	Code Reviews and Best Practices	"Code Review Procedures and Tools
+Adhering to Magento Coding Standards
+Writing Unit Tests and Integration Tests"	3				PHP_CodeSniffer	"
+Magento Coding Standard by Adobe
+https://github.com/magento/magento-coding-standard
+https://developer.adobe.com/commerce/php/coding-standards/
+
+PHPCSStandards
+https://github.com/PHPCSStandards/PHP_CodeSniffer/
+https://github.com/PHPCSStandards/PHPCSExtra
+
+GIT
+https://pmcretail.percipio.com/linked-contents/cff0b733-aa62-4545-b6d3-620cf351b676/landing
+https://pmcretail.percipio.com/courses/72663338-f4fc-4402-8c39-81c325fa5e22/videos/3a82b3eb-277e-49aa-ad9f-552c36255d1d
+"
+	Project-Based Learning	"Building a Custom Magento 2 Module
+Developing a Full-featured API Integration
+Optimizing and Securing a Magento 2 Deployment
+Participating in Real-world Magento 2 Development Projects"	5					
+	"Deployment and Maintenance
+
+"	"Magento 2 Deployment Best Practices
+Managing Updates and Upgrades
+Handling Common Issues and Troubleshooting"	2					
+								
+Purpose	Tool							
+Database	MySQL, MariaDB, Percona							
+Programming language	PHP, JS, HTML, LESS CSS							
+Integrated development environment (IDE)	Eclipse, PHPStorm							
+Web server	Nginx or Apache							
+Caching services	Redis, Varnish							
+Search services	Elasticsearch							
+Message queue services	RabbitMQ							
+								
+								
+								
+								
+
