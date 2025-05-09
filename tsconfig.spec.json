@@ -14,8 +14,139 @@
   ]
 }
 
+1)Introduction to Magento-
+PHP, MySQL & JavaScript All-in-One for Dummies
+https://pmcretail.percipio.com/books/d7c0b175-9dd6-4b46-bbe4-7dae7343953a
+
+CS
+https://developer.adobe.com/commerce/php/coding-standards/php/
+https://developer.adobe.com/commerce/php/coding-standards/js/
+https://developer.adobe.com/commerce/php/coding-standards/less/
+https://developer.adobe.com/commerce/php/coding-standards/html-style-guide/
+
+2)Setting Up Development Environment-
+[Installing Magento locally using Docker or LAMP, WAMP.
+Configuring IDE (VSCode or phpstrome) for Magento 2 development.
+Configuring development environment for efficient development.
+Exploring basic configurations and file structure.]
+
+[Basic understanding of Nginx, MySQL, Command Prompt, PHP, .htaccess, File permissions]
+
+[Composer 
+Nginx orApache
+PHP and it's required extensions 
+MySQL or MariaDB
+ElasticSearch
+xDebug
+Detailed requirements : https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements]
+
+Introduction to the Basic LEMP Stack (For package setup)
+https://pmcretail.percipio.com/videos/fc684d6a-0a68-11e7-89ad-0242c0a80b08
+
+On-premises installation overview (For Magento 2 Setup )
+https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/overview
 
 
+3)Magento Admin Basics-
+Admin Workspace
+https://experienceleague.adobe.com/en/docs/commerce-admin/start/admin/admin
+
+4)Multi-store and Multi-website Setup-
+[Configuring and managing multiple stores and websites within a single Magento instance.
+Implementing shared and separate catalogs, customer bases, and pricing structures.]
+
+Multiple websites or stores
+https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-overview
+
+5)Working with Magento CLI-
+[Access to Command prompt]
+
+Command-line tool
+https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/cli/config-cli
+
+6)Magento Theming Basics-
+[Creating custom themes and child themes.
+Introduction to Magento layout XML and templates.]
+
+7)Advanced Frontend Development-
+[Utilizing RequireJS, Knockout.js, and LESS in Magento frontend.
+Implementing advanced frontend features and optimizations.]
+
+[PHP, HTML, CSS, LESS,  JavaScript, XML]
+
+RequireJS
+https://pmcretail.percipio.com/courses/93108822-14c0-11e7-92d9-0242c0a80b07
+
+Knockout.js
+https://pmcretail.percipio.com/videos/0d813746-a91c-11e7-b050-7a420a93a8e4
+
+Frontend JavaScript
+https://developer.adobe.com/commerce/frontend-core/javascript/
+
+LESS
+https://pmcretail.percipio.com/videos/65f235a2-2c7c-497b-bdcb-7a26520af0b3
+https://pmcretail.percipio.com/courses/9326f659-14c0-11e7-92d9-0242c0a80b07
+
+Page Builder
+https://developer.adobe.com/commerce/frontend-core/page-builder/
+
+7)Module Development-
+Module Structure and Best Practices
+Creating Custom Modules and Configuration
+Dependency Injection and Service Contracts
+
+8)Database Architecture-
+Understanding Magento 2 Database Schema
+Working with EAV (Entity-Attribute-Value) Model
+Creating and Managing Custom Tables and Models
+
+9)API Development-
+Overview of Magento 2 APIs (REST and GraphQL)
+Creating Custom APIs and Endpoints
+Integrating External APIs with Magento 2
+
+10)Event/Observer System-
+Understanding Magento’s Event System
+Creating and Configuring Observers
+Using Plugins to Extend Core Functionality
+
+11)Admin UI and Grid Customization-
+Customizing Admin Forms and Grids
+Extending Admin Functionality with Custom UI Components
+Creating Admin Menus and Actions
+
+12)Performance Optimization-
+Caching Strategies and Techniques
+Database Optimization and Indexing
+Profiling and Debugging Performance Bottlenecks
+
+13)Security Best Practices-
+Implementing Security Measures and Best Practices
+Managing User Roles and Permissions
+Protecting Against Common Vulnerabilities
+
+14)Code Reviews and Best Practices-
+[Code Review Procedures and Tools
+Adhering to Magento Coding Standards
+Writing Unit Tests and Integration Tests]
+
+[PHP_CodeSniffer]
+
+
+Magento Coding Standard by Adobe
+https://github.com/magento/magento-coding-standard
+https://developer.adobe.com/commerce/php/coding-standards/
+
+PHPCSStandards
+https://github.com/PHPCSStandards/PHP_CodeSniffer/
+https://github.com/PHPCSStandards/PHPCSExtra
+
+GIT
+https://pmcretail.percipio.com/linked-contents/cff0b733-aa62-4545-b6d3-620cf351b676/landing
+https://pmcretail.percipio.com/courses/72663338-f4fc-4402-8c39-81c325fa5e22/videos/3a82b3eb-277e-49aa-ad9f-552c36255d1d
+
+
+-------------------------------------------------------------------------------------------------------------------------------
 
 
 
